@@ -42,6 +42,12 @@ class Player(pygame.sprite.Sprite):
         self.damage_cooldown = 0  # Seconds until can take damage again
         self.damage_cooldown_time = self.config.damage_cooldown
 
+        # Attack system
+        self.attack_range = self.config.attack_range
+        self.attack_cooldown = 0  # Seconds until can attack again
+        self.attack_cooldown_time = self.config.attack_cooldown
+        self.is_attacking = False  # True during attack frame
+
     def update(self, delta_time):
         """Update player state
 
@@ -52,8 +58,20 @@ class Player(pygame.sprite.Sprite):
         if self.damage_cooldown > 0:
             self.damage_cooldown -= delta_time
 
+        # Update attack cooldown
+        if self.attack_cooldown > 0:
+            self.attack_cooldown -= delta_time
+
+        # Reset attack state
+        self.is_attacking = False
+
         # Get keyboard state
         keys = pygame.key.get_pressed()
+
+        # Handle attack
+        if keys[pygame.K_SPACE] and self.attack_cooldown <= 0:
+            self.attack()
+
 
         # Calculate movement delta
         dx = 0
@@ -104,6 +122,15 @@ class Player(pygame.sprite.Sprite):
             bool: True if health > 0
         """
         return self.health > 0
+
+    def attack(self):
+        """Perform melee attack.
+
+        Sets is_attacking flag and starts cooldown.
+        Game loop should check this flag to kill nearby zombies.
+        """
+        self.is_attacking = True
+        self.attack_cooldown = self.attack_cooldown_time
 
     def render(self, screen):
         """Draw the player

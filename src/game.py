@@ -4,6 +4,7 @@ Handles the game loop, rendering, and event processing
 """
 import pygame
 import math
+import random
 from entities.player import Player
 from entities.zombie import Zombie
 from config import game_config, zombie_config, ui_config
@@ -46,8 +47,12 @@ class Game:
             self.SCREEN_HEIGHT
         )
 
-        # Create a test zombie (top-left area)
-        self.zombie = Zombie(150, 150)
+        # Zombie management
+        self.zombies = []
+
+        # Spawn initial zombies
+        for _ in range(self.config.initial_zombies):
+            self.spawn_zombie()
 
     def handle_events(self):
         """Process game events"""
@@ -57,6 +62,21 @@ class Game:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
+
+    @staticmethod
+    def get_distance(entity1, entity2):
+        """Calculate distance between two entities.
+
+        Args:
+            entity1: First entity (must have x, y)
+            entity2: Second entity (must have x, y)
+
+        Returns:
+            float: Distance between entity centers
+        """
+        dx = entity1.x - entity2.x
+        dy = entity1.y - entity2.y
+        return math.hypot(dx, dy)
 
     def check_collision(self, entity1, entity2):
         """Check circle collision between two entities.
@@ -68,13 +88,29 @@ class Game:
         Returns:
             bool: True if entities are colliding
         """
-        # Calculate distance between centers
-        dx = entity1.x - entity2.x
-        dy = entity1.y - entity2.y
-        distance = math.sqrt(dx * dx + dy * dy)
-
+        distance = self.get_distance(entity1, entity2)
         # Collision if distance < sum of radii
         return distance < (entity1.radius + entity2.radius)
+
+    def spawn_zombie(self):
+        """Spawn a zombie at a random position off-screen."""
+        buffer = self.config.spawn_offscreen_buffer
+        side = random.choice(("top", "bottom", "left", "right"))
+
+        if side == "top":
+            x = random.randint(0, self.SCREEN_WIDTH)
+            y = -buffer
+        elif side == "bottom":
+            x = random.randint(0, self.SCREEN_WIDTH)
+            y = self.SCREEN_HEIGHT + buffer
+        elif side == "left":
+            x = -buffer
+            y = random.randint(0, self.SCREEN_HEIGHT)
+        else:  # right
+            x = self.SCREEN_WIDTH + buffer
+            y = random.randint(0, self.SCREEN_HEIGHT)
+
+        self.zombies.append(Zombie(x, y))
 
     def update(self, delta_time):
         """Update game state
@@ -85,27 +121,43 @@ class Game:
         # Update player
         self.player.update(delta_time)
 
-        # Update zombie (pass player position for chasing)
-        self.zombie.update(delta_time, self.player.x, self.player.y)
+        # Update all zombies
+        for zombie in self.zombies:
+            zombie.update(delta_time, self.player.x, self.player.y)
 
-        # Check collision between player and zombie
-        if self.check_collision(self.player, self.zombie):
-            # Apply damage to player
-            if self.player.take_damage(self.zombie.damage):
-                # Damage was applied (not on cooldown)
-                if not self.player.is_alive():
-                    # Player died - game over
-                    self.running = False
+        # Check player attacks
+        if self.player.is_attacking:
+            # Kill zombies within attack range
+            survivors = []
+            for zombie in self.zombies:
+                if self.get_distance(self.player, zombie) <= self.player.attack_range:
+                    # Zombie killed - future logic (score, sounds, etc.) goes here
+                    pass
+                else:
+                    survivors.append(zombie)
+            self.zombies = survivors
+
+        # Check collisions with all zombies
+        for zombie in self.zombies:
+            if self.check_collision(self.player, zombie):
+                # Apply damage to player
+                if self.player.take_damage(zombie.damage):
+                    # Damage was applied (not on cooldown)
+                    if not self.player.is_alive():
+                        # Player died - game over
+                        self.running = False
+                        break  # No need to check more zombies
 
     def render(self):
         """Render the game"""
         # Fill background
         self.screen.fill(self.BACKGROUND_COLOR)
 
-        # Render zombie
-        self.zombie.draw(self.screen)
+        # Render all zombies
+        for zombie in self.zombies:
+            zombie.draw(self.screen)
 
-        # Render player (on top of zombie)
+        # Render player (on top of zombies)
         self.player.render(self.screen)
 
         # Render health bar

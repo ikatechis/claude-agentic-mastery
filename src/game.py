@@ -63,7 +63,8 @@ class Game:
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
 
-    def get_distance(self, entity1, entity2):
+    @staticmethod
+    def get_distance(entity1, entity2):
         """Calculate distance between two entities.
 
         Args:
@@ -127,8 +128,14 @@ class Game:
         # Check player attacks
         if self.player.is_attacking:
             # Kill zombies within attack range
-            self.zombies = [z for z in self.zombies
-                           if self.get_distance(self.player, z) > self.player.attack_range]
+            survivors = []
+            for zombie in self.zombies:
+                if self.get_distance(self.player, zombie) <= self.player.attack_range:
+                    # Zombie killed - future logic (score, sounds, etc.) goes here
+                    pass
+                else:
+                    survivors.append(zombie)
+            self.zombies = survivors
 
         # Check collisions with all zombies
         for zombie in self.zombies:

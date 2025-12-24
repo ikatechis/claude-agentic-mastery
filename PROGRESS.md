@@ -119,18 +119,177 @@
 
 ---
 
+## Session 2: Zombies, Collision & Combat System 🚧 IN PROGRESS
+
+**Date:** December 24, 2024
+**Duration:** ~2 hours (ongoing)
+**Git Commit:** 8a10989 - feat: add zombies, combat system, and centralized config
+
+### What We Built
+
+#### Configuration System (src/config.py) ✅
+- ✅ **Dataclass-based configuration**
+  - GameConfig (screen, FPS, colors)
+  - PlayerConfig (radius, color, speed, health)
+  - ZombieConfig (radius, color, speed, damage)
+  - UIConfig (responsive health bar positioning)
+- ✅ **Ratio-based UI positioning**
+  - Health bar scales with screen size
+  - No hardcoded pixel coordinates
+  - Professional responsive design
+
+#### Zombie Entity (src/entities/zombie.py) ✅
+- ✅ **Zombie class**
+  - Red circle (radius 12, smaller than player)
+  - Chase AI using vector math
+  - Speed: 80 px/sec (slower than player's 200)
+  - Configurable damage (10 HP per hit)
+- ✅ **AI Movement**
+  - Calculates direction to player
+  - Normalizes movement vector
+  - Frame-independent movement
+
+#### Combat & Health System ✅
+- ✅ **Player Health** (entities/player.py)
+  - 100 max health
+  - take_damage() method with cooldown
+  - 1-second damage cooldown
+  - is_alive() check
+- ✅ **Collision Detection** (game.py)
+  - Circle-based collision (math.sqrt distance check)
+  - check_collision() method
+  - Applies damage on zombie contact
+- ✅ **Health Bar UI** (game.py)
+  - Responsive positioning (ratios, not pixels)
+  - Red background (missing health)
+  - Green foreground (current health)
+  - White border
+  - HP text display (e.g., "HP: 100/100")
+- ✅ **Game Over**
+  - Player dies when health reaches 0
+  - Game loop exits
+
+#### Upgrades & Improvements
+- ✅ **pygame 2.5.2 → 2.6.0** upgrade
+- ✅ **ref.tools MCP server** added for documentation lookups
+- ✅ **Centralized configuration** using dataclasses
+
+### What's Still Missing (Session 2 Incomplete)
+
+- ❌ **ARCHITECTURE.md** - Not created yet
+- ❌ **Melee Combat System**
+  - SPACE key to attack
+  - Attack range (50 pixels)
+  - Attack cooldown (0.5 seconds)
+  - Kill zombies in range
+- ❌ **Zombie Spawning System**
+  - Currently: 1 hardcoded zombie at (150, 150)
+  - Need: Multiple zombies
+  - Need: Random spawn positions off-screen
+  - Need: Wave-based spawning
+
+### Concepts Learned
+
+#### Configuration Management
+- **Dataclasses for config**
+  - Type hints
+  - Default values
+  - Clean organization by component
+- **Responsive UI design**
+  - Use ratios instead of absolute pixels
+  - Scale with screen dimensions
+  - Future-proof for resolution changes
+
+#### Game Systems
+- **Circle collision detection**
+  - Distance = sqrt((x1-x2)² + (y1-y2)²)
+  - Collision if distance < (radius1 + radius2)
+- **Vector-based AI**
+  - Calculate direction: (target - position)
+  - Normalize: divide by magnitude
+  - Apply movement: position += direction * speed * dt
+- **Cooldown systems**
+  - Prevent every-frame actions
+  - Count down with delta_time
+  - Reset on trigger
+
+#### Documentation & MCP
+- **ref.tools MCP server**
+  - Faster than web_search for API lookups
+  - Prompt caching
+  - Direct documentation access
+- **VS Code integration**
+  - Visual diffs in editor
+  - IDE diagnostics sharing
+  - Better review workflow
+
+### Verification Discipline
+
+**APIs Verified This Session:**
+- math.sqrt() for distance calculation (standard library)
+- pygame.font.init(), pygame.font.Font() for UI text
+- pygame.draw.rect() for health bar rendering
+- Dataclass syntax and field types (Python 3.11)
+
+**Best Practices Applied:**
+- Used config dataclasses instead of hardcoded values
+- Ratio-based positioning for responsive UI
+- Separation of concerns (entities, config, game logic)
+
+### Key Lessons
+
+1. **Configuration scalability**
+   - Centralized config prevents "magic numbers"
+   - Dataclasses provide type safety
+   - Easy to tune game balance
+
+2. **Responsive UI matters**
+   - Ratios > hardcoded pixels
+   - Screen size changes shouldn't break UI
+   - Professional approach from the start
+
+3. **Cooldown systems prevent spam**
+   - Without cooldown: Damage every frame (60/sec)
+   - With cooldown: Controlled damage rate
+   - Makes game playable
+
+4. **Vector math for AI**
+   - Simple but effective chase behavior
+   - Normalizing prevents speed variations
+   - Foundation for more complex AI
+
+### Statistics
+
+- **Files Created:** 2 (config.py, zombie.py)
+- **Files Modified:** 3 (player.py, game.py, CLAUDE.md)
+- **Lines of Code Added:** ~200
+- **APIs Verified:** 4
+- **Zero bugs:** Code worked on first run!
+
+### Session 2 Status
+
+**Completion:** ~70%
+**Remaining Work:**
+1. Create ARCHITECTURE.md
+2. Implement melee combat (SPACE to attack)
+3. Implement zombie spawning system (multiple zombies, waves)
+
+---
+
 ## Overall Progress
 
 **Current Phase:** 1 - Foundation
-**Current Session:** 1 / 15
-**Completion:** 6.7%
+**Current Session:** 2 / 15 (70% complete)
+**Completion:** ~13%
 
 ### Zombie Survival Features
 
 - [x] Basic window and player
-- [ ] Zombie spawning and AI
-- [ ] Combat mechanics
-- [ ] Health system
+- [x] Zombie entity with chase AI ✅
+- [x] Collision detection ✅
+- [x] Health system ✅
+- [ ] Melee combat (SPACE to attack)
+- [ ] Multiple zombie spawning
 - [ ] Weapons and upgrades
 - [ ] Boss zombies
 - [ ] Sound and effects
@@ -150,23 +309,17 @@
 
 ---
 
-## Next Session
+## Next Steps
 
-**Planned:** Session 2 - Zombies & Combat
-**Goal:** Add zombies, collision, melee combat, health system
-**Focus:** Continue verification discipline
-**Preparation:**
-- Review @CLAUDE.md verification protocol
-- Read @SESSION_GUIDES/SESSION_02.md
-- Start fresh Claude session
+**Current:** Complete Session 2 (~30% remaining)
+**Remaining Tasks:**
+1. Create ARCHITECTURE.md
+2. Implement melee combat (SPACE to attack)
+3. Implement zombie spawning system (multiple zombies, random spawn)
 
-**Session 2 Preview:**
-- ARCHITECTURE.md documentation
-- Zombie class (red circle, AI movement)
-- pygame.sprite.spritecollide() for collision
-- SPACE key melee attack
-- Health display with pygame.font
-- **VERIFY all pygame APIs first!**
+**Then:** Session 3 - Skills & Subagents
+**Goal:** Learn to create custom Skills and Subagents
+**Focus:** Agentic coding tools beyond verification
 
 ---
 

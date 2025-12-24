@@ -1,33 +1,51 @@
 # TODO - Zombie Survival Game
 
-**Last Updated:** Session 1 (Complete)
+**Last Updated:** Session 2 (70% Complete)
 
-## Session 2 Tasks (Next)
+## Session 2 Tasks (Ongoing - 70% Complete)
+
+### Completed ✅
+- [x] Create centralized config system (src/config.py)
+  - [x] GameConfig dataclass
+  - [x] PlayerConfig dataclass
+  - [x] ZombieConfig dataclass
+  - [x] UIConfig dataclass with responsive positioning
+- [x] Add Zombie entity (src/entities/zombie.py)
+  - [x] Zombie class (red circle, slower than player)
+  - [x] Chase AI (vector-based movement toward player)
+- [x] Implement zombie AI
+  - [x] Calculate direction to player
+  - [x] Normalize movement vector
+  - [x] Frame-independent movement
+- [x] Add collision detection
+  - [x] Circle-based collision (math.sqrt distance)
+  - [x] check_collision() method in game.py
+- [x] Add health system
+  - [x] Player starts with 100 health
+  - [x] take_damage() method with cooldown
+  - [x] Damage cooldown (1 second)
+  - [x] Lose 10 health per zombie collision
+  - [x] Display health bar (responsive, ratio-based)
+  - [x] Game over at 0 health
+- [x] Upgrade pygame 2.5.2 → 2.6.0
+- [x] Add ref.tools MCP server for docs lookup
+- [x] **VERIFIED** all pygame APIs before implementing ✅
+
+### Remaining ❌
 - [ ] Create ARCHITECTURE.md documenting game structure
-- [ ] Add zombie spawning system
-  - [ ] Zombie class (red circle, slower than player)
-  - [ ] Spawn at random positions off-screen
-  - [ ] Multiple zombies at once
-- [ ] Implement zombie AI (move toward player)
-  - [ ] Calculate direction to player
-  - [ ] Move zombies each frame
-- [ ] Add collision detection
-  - [ ] Player-zombie collision
-  - [ ] Remove zombie on collision (temporary)
 - [ ] Implement melee combat system
   - [ ] SPACE key to attack
   - [ ] Attack range (50 pixels)
   - [ ] Attack cooldown (0.5 seconds)
-  - [ ] Kill zombies in range
-- [ ] Add health system
-  - [ ] Player starts with 100 health
-  - [ ] Lose 10 health per zombie collision
-  - [ ] Display health in top-left corner
-  - [ ] Game over at 0 health
-- [ ] **VERIFY all pygame APIs before implementing**
+  - [ ] Kill zombies in attack range
+- [ ] Implement zombie spawning system
+  - [ ] Multiple zombies (currently only 1 hardcoded)
+  - [ ] Random spawn positions off-screen
+  - [ ] Wave-based spawning (progressive difficulty)
 
 ## Future Sessions
-- Session 3+: Skills, Subagents, Advanced features
+- Session 3: Skills creation, Subagents introduction
+- Session 4+: Advanced features, MCP integration
 - (Will be filled in as we progress)
 
 ## Completed ✓

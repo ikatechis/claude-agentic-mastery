@@ -3,6 +3,7 @@ Player entity for Zombie Survival game
 Handles player movement, rendering, and collision
 """
 import pygame
+from config import player_config
 
 
 class Player(pygame.sprite.Sprite):
@@ -19,10 +20,13 @@ class Player(pygame.sprite.Sprite):
         """
         super().__init__()
 
+        # Configuration
+        self.config = player_config
+
         # Player properties
-        self.radius = 15
-        self.color = (0, 255, 0)  # Green
-        self.speed = 200  # Pixels per second
+        self.radius = self.config.radius
+        self.color = self.config.color
+        self.speed = self.config.speed
 
         # Position (center of circle)
         self.x = float(x)
@@ -32,12 +36,22 @@ class Player(pygame.sprite.Sprite):
         self.screen_width = screen_width
         self.screen_height = screen_height
 
+        # Health system
+        self.max_health = self.config.max_health
+        self.health = self.max_health
+        self.damage_cooldown = 0  # Seconds until can take damage again
+        self.damage_cooldown_time = self.config.damage_cooldown
+
     def update(self, delta_time):
         """Update player state
 
         Args:
             delta_time: Time elapsed since last frame in seconds
         """
+        # Update damage cooldown
+        if self.damage_cooldown > 0:
+            self.damage_cooldown -= delta_time
+
         # Get keyboard state
         keys = pygame.key.get_pressed()
 
@@ -66,6 +80,30 @@ class Player(pygame.sprite.Sprite):
         # Keep player within screen boundaries
         self.x = max(self.radius, min(self.x, self.screen_width - self.radius))
         self.y = max(self.radius, min(self.y, self.screen_height - self.radius))
+
+    def take_damage(self, amount):
+        """Apply damage to the player.
+
+        Args:
+            amount: Damage amount to apply
+
+        Returns:
+            bool: True if damage was applied, False if on cooldown
+        """
+        if self.damage_cooldown <= 0:
+            self.health -= amount
+            self.health = max(0, self.health)  # Don't go below 0
+            self.damage_cooldown = self.damage_cooldown_time
+            return True
+        return False
+
+    def is_alive(self):
+        """Check if player is still alive.
+
+        Returns:
+            bool: True if health > 0
+        """
+        return self.health > 0
 
     def render(self, screen):
         """Draw the player

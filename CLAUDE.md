@@ -8,7 +8,7 @@ Top-down zombie survival game built with pygame. This is a learning project for 
 
 - **Python:** 3.11.5 (managed by pyenv)
 - **Package Manager:** uv (v0.9.18)
-- **Game Library:** pygame==2.5.2
+- **Game Library:** pygame==2.6.0
 - **Version Control:** Git
 
 ## How to Run
@@ -53,10 +53,12 @@ src/
 
 ### You MUST:
 
-1. **Search official documentation** (use web_search tool)
-   - pygame documentation for pygame 2.5.2
-   - Python documentation for Python 3.11
-   - uv documentation for package management
+1. **Search official documentation** (use ref.tools MCP for API lookups)
+   - **Primary:** `ref_search_documentation` + `ref_read_url` for library/framework APIs
+   - **Secondary:** `web_search` for tutorials, examples, troubleshooting
+   - Check library versions in pyproject.toml before searching
+   - Verify Python 3.11 compatibility for standard library features
+   - Check tool documentation (uv, pyenv, etc.) for command syntax
 
 2. **Verify exact syntax**
    - Function signatures (parameters, return types)
@@ -69,10 +71,11 @@ src/
    - Verify APIs exist in the specified version
    - Never assume newer/older API features
 
-4. **State confidence level for EVERY suggestion:**
-   - ✅ **VERIFIED:** "Checked pygame 2.5.2 docs - pygame.sprite.Sprite requires super().__init__()"
+4. **State confidence level for library-specific suggestions:**
+   - ✅ **VERIFIED:** "Checked pygame 2.6.0 docs via ref.tools - pygame.sprite.Sprite requires super().__init__()"
+   - ✅ **OBVIOUS:** "Using standard Python `for` loop (no verification needed)"
    - ⚠️ **UNCERTAIN:** "Will search pygame docs to verify correct parameters"
-   - ❌ **GUESSING:** "Let me verify this with web_search before proceeding"
+   - ❌ **GUESSING:** "Let me verify this with ref.tools before proceeding"
 
 5. **Never guess:**
    - API names or signatures
@@ -83,21 +86,25 @@ src/
 
 ### What to Verify
 
-**Pygame APIs:**
+**External Library APIs:**
 - Function/method signatures, parameter names/types, return values
-- Class inheritance patterns, event types and constants
+- Class inheritance patterns, special methods
+- Framework-specific concepts (sprites, events, collision detection, etc.)
+- Version-specific features and deprecations
 
 **Python Features:**
-- Syntax compatibility with Python 3.11
+- Syntax compatibility with project's Python version (check pyproject.toml)
 - Standard library functions, built-in methods
+- Type hints and annotations
 
 **Tools & Commands:**
-- uv commands (add, sync, run, etc.)
-- pyenv commands (local, global, etc.)
-- Git commands (init, add, commit, etc.)
+- Package manager commands (uv add, sync, run, etc.)
+- Version managers (pyenv local, global, etc.)
+- Git commands (commit, push, branch, etc.)
 
 **Configuration Files:**
-- pyproject.toml structure, .python-version format, .gitignore patterns
+- pyproject.toml structure, dependencies format
+- Tool-specific config (.python-version, .gitignore, etc.)
 
 ### Why Verification Matters
 
@@ -117,16 +124,73 @@ src/
 
 ### Examples
 
-✅ **GOOD:** "Searched pygame 2.5.2 docs - pygame.display.set_mode((width, height)) confirmed"
+✅ **GOOD:** "Used ref.tools to verify pygame.sprite.Group - confirmed add(), remove(), update(), draw() methods"
+
+✅ **GOOD:** "Searched pygame 2.6.0 docs via ref_read_url - pygame.display.set_mode((width, height)) confirmed"
 
 ❌ **BAD:** "I think pygame has a circle() function" (proceeds without verification)
 
+### When to Use Each Tool
+
+**Use ref.tools (ref_search_documentation + ref_read_url):**
+- Quick API signature verification
+- Function parameter names and types
+- Class methods and attributes
+- Official documentation lookups
+- **Benefits:** Faster, more precise, lower token usage, prompt caching
+
+**Use web_search:**
+- Need code examples or tutorials
+- Troubleshooting specific errors
+- Community solutions and patterns
+- Broader context beyond API docs
+
+### Smart Verification (Reduce API Usage)
+
+**❌ DON'T verify these (waste of tokens):**
+- Basic Python syntax: `if`, `for`, `while`, `print()`, `len()`, `range()`
+- Standard operators: `+`, `-`, `*`, `/`, `==`, `and`, `or`
+- APIs already verified in current session (reference previous verification)
+- Obvious operations: variable assignment, function calls, imports
+- Common patterns: `__init__()`, `super().__init__()`, `self.attribute`
+
+**✅ DO verify these (critical for correctness):**
+- **External library APIs** (pygame, numpy, any third-party packages)
+- New library functions/classes not yet used in project
+- Version-specific features (check exact version in pyproject.toml)
+- Parameter order/names for unfamiliar functions
+- Return types and expected values
+- Framework-specific patterns (pygame event handling, sprite systems, etc.)
+
+**💡 Optimization tips:**
+- **Batch verifications:** Search "pygame sprite Group add update draw" instead of 3 separate lookups
+- **Reference earlier:** "As verified earlier, pygame.sprite.Group.add()..."
+- **Be concise:** Skip verbose explanations unless asked
+- **Only read files when needed:** Don't speculatively read files
+
 ## Development Workflow
 
-1. **Before coding:** Search docs and verify APIs
+1. **Before coding:** Verify APIs with ref.tools (or web_search if needed)
 2. **After coding:** Test immediately with `uv run python src/main.py`
 3. **Before committing:** Ensure game runs without errors
 4. **Git commits:** Use conventional commit format (feat:, fix:, docs:, etc.)
+
+### Example Verification Workflow
+
+```bash
+# 1. Check what we need (e.g., collision detection for zombies)
+ref_search_documentation("pygame sprite collision pygame 2.6.0")
+
+# 2. Read specific API docs
+ref_read_url("https://www.pygame.org/docs/ref/sprite.html#pygame.sprite.spritecollide")
+
+# 3. Verify exact syntax before writing code
+# ✅ CONFIRMED: spritecollide(sprite, group, dokill, collided=None)
+
+# 4. Write code with confidence
+# 5. Test immediately
+uv run python src/main.py
+```
 
 ## Project Goals
 
@@ -141,7 +205,7 @@ Building through 15 sessions to learn:
 **Session 1 Complete:**
 - ✅ Python 3.11.5 with pyenv
 - ✅ uv package manager setup
-- ✅ pygame 2.5.2 installed
+- ✅ pygame 2.6.0 installed
 - ✅ Game window (800x600, 60 FPS)
 - ✅ Player with WASD movement
 - ✅ Verification protocol established
@@ -153,5 +217,9 @@ Building through 15 sessions to learn:
 **VERIFICATION ISN'T OPTIONAL - IT'S MANDATORY**
 
 Every suggestion without verification is a potential bug.
-Always search docs first. State what you verified.
+Always use ref.tools to search docs first. State what you verified.
 Build with confidence through verification.
+
+**MCP Tools Available:**
+- ✅ **ref.tools** - Installed and configured for pygame/Python documentation
+- Use `ref_search_documentation` and `ref_read_url` for all API verifications

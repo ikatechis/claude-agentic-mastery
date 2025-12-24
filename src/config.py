@@ -12,6 +12,8 @@ class GameConfig:
     screen_height: int = 600
     fps: int = 60
     background_color: tuple = (50, 50, 50)  # Dark gray
+    initial_zombies: int = 3  # Number of zombies at game start
+    spawn_offscreen_buffer: int = 50  # Distance off-screen for spawning
 
 
 @dataclass

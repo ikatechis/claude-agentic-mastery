@@ -51,7 +51,7 @@ class Game:
         self.zombies = []
 
         # Spawn initial zombies
-        for _ in range(3):
+        for _ in range(self.config.initial_zombies):
             self.spawn_zombie()
 
     def handle_events(self):
@@ -75,7 +75,7 @@ class Game:
         """
         dx = entity1.x - entity2.x
         dy = entity1.y - entity2.y
-        return math.sqrt(dx * dx + dy * dy)
+        return math.hypot(dx, dy)
 
     def check_collision(self, entity1, entity2):
         """Check circle collision between two entities.
@@ -93,20 +93,20 @@ class Game:
 
     def spawn_zombie(self):
         """Spawn a zombie at a random position off-screen."""
-        # Choose a random side: 0=top, 1=right, 2=bottom, 3=left
-        side = random.randint(0, 3)
+        buffer = self.config.spawn_offscreen_buffer
+        side = random.choice(("top", "bottom", "left", "right"))
 
-        if side == 0:  # Top
+        if side == "top":
             x = random.randint(0, self.SCREEN_WIDTH)
-            y = -50
-        elif side == 1:  # Right
-            x = self.SCREEN_WIDTH + 50
+            y = -buffer
+        elif side == "bottom":
+            x = random.randint(0, self.SCREEN_WIDTH)
+            y = self.SCREEN_HEIGHT + buffer
+        elif side == "left":
+            x = -buffer
             y = random.randint(0, self.SCREEN_HEIGHT)
-        elif side == 2:  # Bottom
-            x = random.randint(0, self.SCREEN_WIDTH)
-            y = self.SCREEN_HEIGHT + 50
-        else:  # Left
-            x = -50
+        else:  # right
+            x = self.SCREEN_WIDTH + buffer
             y = random.randint(0, self.SCREEN_HEIGHT)
 
         self.zombies.append(Zombie(x, y))
@@ -128,8 +128,7 @@ class Game:
         if self.player.is_attacking:
             # Kill zombies within attack range
             self.zombies = [z for z in self.zombies
-                           if not self.check_collision(self.player, z) or
-                           self.get_distance(self.player, z) > self.player.attack_range]
+                           if self.get_distance(self.player, z) > self.player.attack_range]
 
         # Check collisions with all zombies
         for zombie in self.zombies:

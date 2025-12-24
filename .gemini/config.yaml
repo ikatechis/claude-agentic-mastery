@@ -1,0 +1,22 @@
+# Gemini Code Assist Configuration
+# Customize how Gemini reviews your pull requests
+
+# Automatic code reviews on PR creation (default: true)
+# Set to false to only review when you comment "/gemini review"
+code_review: false
+
+# Automatic PR summaries (default: true)
+# Helpful for understanding changes at a glance
+summary: true
+
+# Review draft PRs (default: true)
+# Set to false if you only want reviews on ready-for-review PRs
+include_drafts: false
+
+# Minimum severity for review comments (LOW, MEDIUM, HIGH, CRITICAL)
+# Filters out minor suggestions, focuses on important issues
+comment_severity_threshold: MEDIUM
+
+# Maximum number of review comments per PR
+# Prevents overwhelming feedback on large changes
+max_review_comments: 20

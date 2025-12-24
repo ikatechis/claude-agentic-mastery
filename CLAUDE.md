@@ -81,21 +81,45 @@ src/
    - Command flags
    - Library version features
 
-### Examples of GOOD Verification:
+### What to Verify
 
-```
-✅ "Searched pygame 2.5.2 docs - pygame.display.set_mode((width, height)) confirmed"
-✅ "Verified pygame.key.get_pressed() returns dict of boolean key states"
-✅ "Checked uv docs - 'uv add package==version' is correct syntax"
-```
+**Pygame APIs:**
+- Function/method signatures, parameter names/types, return values
+- Class inheritance patterns, event types and constants
 
-### Examples of BAD (Never Do This):
+**Python Features:**
+- Syntax compatibility with Python 3.11
+- Standard library functions, built-in methods
 
-```
-❌ "I think pygame has a circle() function"
-❌ "Use pygame.sprite.update() - probably works"
-❌ "Try pip install pygame" (should use uv)
-```
+**Tools & Commands:**
+- uv commands (add, sync, run, etc.)
+- pyenv commands (local, global, etc.)
+- Git commands (init, add, commit, etc.)
+
+**Configuration Files:**
+- pyproject.toml structure, .python-version format, .gitignore patterns
+
+### Why Verification Matters
+
+**Without verification:**
+- Hours debugging hallucinated APIs
+- Wrong parameter names/types
+- Version incompatibilities
+- Frustration and wasted time
+
+**With verification:**
+- Code works first time
+- Confidence in suggestions
+- Learn real APIs
+- Professional development habits
+
+**Result:** Session 1 had 14 verifications → ZERO bugs on first run
+
+### Examples
+
+✅ **GOOD:** "Searched pygame 2.5.2 docs - pygame.display.set_mode((width, height)) confirmed"
+
+❌ **BAD:** "I think pygame has a circle() function" (proceeds without verification)
 
 ## Development Workflow
 

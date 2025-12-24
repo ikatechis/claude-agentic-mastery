@@ -312,13 +312,14 @@ Creating player code now...
 >  4. State confidence: ✅ VERIFIED or ⚠️ UNCERTAIN
 >  5. Never guess - always verify first"
 >
-> Keep the whole file under 80 lines - essential info only.
+> Also include "What to Verify" and "Why Verification Matters" sections.
+> Keep the file comprehensive but scannable.
 ```
 
 **Review the CLAUDE.md:**
 - Is verification protocol clearly stated?
 - Does it emphasize searching docs first?
-- Is it clear and concise?
+- Does it include what to verify and why it matters?
 - Would it help Claude in future sessions?
 
 **If verification protocol is missing or weak:**
@@ -329,47 +330,6 @@ Creating player code now...
 > - Stating verification results
 > - Never guessing API syntax
 > Make this mandatory and prominent.
-```
-
----
-
-### Part 6: Create Verification Checklist (15 minutes)
-
-**Tell Claude:**
-```
-> Create a VERIFICATION.md file that lists:
-> 1. What must be verified before coding
-> 2. How to verify (web_search examples)
-> 3. How to state confidence levels
-> 4. Examples of good vs bad verification
->
-> This will be our reference for maintaining quality.
-```
-
-**Expected content:**
-```markdown
-# Verification Protocol
-
-## Before ANY Code/Command
-
-1. Search official documentation
-2. Verify exact syntax
-3. Check version compatibility
-4. State confidence level
-
-## Examples
-
-✅ GOOD:
-"Searched pygame 2.5.2 docs - pygame.sprite.Sprite.update() is standard method"
-
-❌ BAD:
-"I think pygame has an update() method"
-
-## Confidence Levels
-
-✅ VERIFIED - Checked official docs
-⚠️ UNCERTAIN - Need to verify
-❌ GUESSING - Must search first
 ```
 
 ---
@@ -473,7 +433,6 @@ Before ending this session, verify:
 - [ ] WASD movement works in all 8 directions
 - [ ] Player stays within screen boundaries
 - [ ] CLAUDE.md exists with STRONG verification protocol
-- [ ] VERIFICATION.md exists as reference
 - [ ] README.md exists
 - [ ] .python-version specifies Python 3.10+
 - [ ] pyproject.toml has pygame==2.5.2

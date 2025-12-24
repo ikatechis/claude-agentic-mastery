@@ -45,7 +45,6 @@
 - [x] Player boundary checking
 - [x] Diagonal movement normalization
 - [x] Create CLAUDE.md with VERIFICATION PROTOCOL ⭐
-- [x] Create VERIFICATION.md checklist
 - [x] Make first git commit
 - [x] Create .gitignore
 - [x] Establish verification-first workflow

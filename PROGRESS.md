@@ -41,7 +41,7 @@
 
 #### Documentation
 - ✅ **CLAUDE.md** - Project instructions + MANDATORY verification protocol
-- ✅ **VERIFICATION.md** - Quick reference checklist
+- ✅ **QUICK_REFERENCE.md** - Commands cheatsheet
 - ✅ **TODO.md** - Task tracking (updated)
 - ✅ **PROGRESS.md** - This file!
 
@@ -107,7 +107,7 @@
 
 5. **Documentation = Code quality**
    - CLAUDE.md guides future sessions
-   - VERIFICATION.md prevents regressions
+   - Verification protocol prevents regressions
 
 ### Statistics
 

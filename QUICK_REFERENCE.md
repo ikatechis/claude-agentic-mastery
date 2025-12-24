@@ -1,15 +1,12 @@
-# Quick Reference - Verification-First Agentic Coding
+# Quick Reference - Commands & Shortcuts
 
-## 🔒 VERIFICATION PROTOCOL (Always First!)
+> **📖 Complete project guide:** See @CLAUDE.md
+> **⚡ This file:** Quick command reference only
 
-**Before ANY code/command:**
-```
-1. Search official docs (web_search)
-2. Verify exact syntax
-3. Check @pyproject.toml versions
-4. State: ✅ VERIFIED or ⚠️ UNCERTAIN
-5. Never guess
-```
+## 🔒 Verification Protocol (Brief)
+
+**Before any code:** Verify in docs → Check @pyproject.toml → State ✅ VERIFIED
+**Full protocol:** See CLAUDE.md § Verification
 
 ## Essential Commands
 
@@ -32,27 +29,7 @@ Shift+Tab         # Cycle modes (normal/plan/auto-accept)
 @folder/file      # Reference with path
 ```
 
-## Verification Examples
 
-### ✅ GOOD
-```
-"Searched pygame 2.5.2 docs - pygame.sprite.Sprite.update() confirmed"
-"Verified pygame.draw.circle(surface, color, center, radius) signature"
-```
-
-### ❌ BAD
-```
-"I think pygame has update()"
-"Use pygame.draw.circle() probably"
-```
-
-## When to Verify
-
-- [ ] Before writing ANY code
-- [ ] Before using ANY pygame function
-- [ ] Before suggesting ANY parameter
-- [ ] Before creating config files
-- [ ] Before using command flags
 
 ## Quick Decision: Use Plan Mode?
 

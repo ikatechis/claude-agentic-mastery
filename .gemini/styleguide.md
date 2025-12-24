@@ -28,6 +28,20 @@ Please focus your code reviews on:
 - Explain *why* something is an issue, not just *what*
 - Focus on correctness over style preferences
 
+## Verification and Uncertainty
+
+**CRITICAL: When you are uncertain about a suggestion:**
+- Do NOT guess or make up API signatures, configuration schemas, or documentation
+- State clearly: "I'm not certain about X, please verify in the official docs"
+- If a comment references external documentation, acknowledge you cannot fetch it
+- Admit when you don't have enough context to make a confident suggestion
+- Prefer asking clarifying questions over making assumptions
+
+**For configuration files and schemas:**
+- Only suggest configurations you are absolutely certain are correct
+- If unsure about schema structure, say so explicitly
+- Warn when suggesting changes to critical files (.gemini/config.yaml, pyproject.toml, etc.)
+
 ## Ignore
 
 - Minor style preferences (indentation, naming) unless they violate project conventions

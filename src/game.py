@@ -2,12 +2,15 @@
 Main game class for Zombie Survival
 Handles the game loop, rendering, and event processing
 """
-import pygame
+
 import math
 import random
+
+import pygame
+
+from config import game_config, ui_config
 from entities.player import Player
 from entities.zombie import Zombie
-from config import game_config, zombie_config, ui_config
 
 
 class Game:
@@ -41,10 +44,7 @@ class Game:
 
         # Create player at center of screen
         self.player = Player(
-            self.SCREEN_WIDTH // 2,
-            self.SCREEN_HEIGHT // 2,
-            self.SCREEN_WIDTH,
-            self.SCREEN_HEIGHT
+            self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 2, self.SCREEN_WIDTH, self.SCREEN_HEIGHT
         )
 
         # Zombie management
@@ -57,11 +57,12 @@ class Game:
     def handle_events(self):
         """Process game events"""
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if (
+                event.type == pygame.QUIT
+                or event.type == pygame.KEYDOWN
+                and event.key == pygame.K_ESCAPE
+            ):
                 self.running = False
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    self.running = False
 
     @staticmethod
     def get_distance(entity1, entity2):
@@ -139,14 +140,17 @@ class Game:
 
         # Check collisions with all zombies
         for zombie in self.zombies:
-            if self.check_collision(self.player, zombie):
-                # Apply damage to player
-                if self.player.take_damage(zombie.damage):
-                    # Damage was applied (not on cooldown)
-                    if not self.player.is_alive():
-                        # Player died - game over
-                        self.running = False
-                        break  # No need to check more zombies
+            if not self.check_collision(self.player, zombie):
+                continue
+
+            # Apply damage to player
+            if not self.player.take_damage(zombie.damage):
+                continue  # Damage on cooldown
+
+            # Check if player died
+            if not self.player.is_alive():
+                self.running = False
+                break
 
     def render(self):
         """Render the game"""
@@ -175,24 +179,31 @@ class Game:
         bar_height = self.ui_config.health_bar_height
 
         # Background (red, shows missing health)
-        pygame.draw.rect(self.screen, self.ui_config.health_bar_bg_color,
-                        (bar_x, bar_y, bar_width, bar_height))
+        pygame.draw.rect(
+            self.screen, self.ui_config.health_bar_bg_color, (bar_x, bar_y, bar_width, bar_height)
+        )
 
         # Foreground (green, shows current health)
         health_width = int((self.player.health / self.player.max_health) * bar_width)
-        pygame.draw.rect(self.screen, self.ui_config.health_bar_fg_color,
-                        (bar_x, bar_y, health_width, bar_height))
+        pygame.draw.rect(
+            self.screen,
+            self.ui_config.health_bar_fg_color,
+            (bar_x, bar_y, health_width, bar_height),
+        )
 
         # Border
-        pygame.draw.rect(self.screen, self.ui_config.health_bar_border_color,
-                        (bar_x, bar_y, bar_width, bar_height),
-                        self.ui_config.health_bar_border_width)
+        pygame.draw.rect(
+            self.screen,
+            self.ui_config.health_bar_border_color,
+            (bar_x, bar_y, bar_width, bar_height),
+            self.ui_config.health_bar_border_width,
+        )
 
         # Health text
         health_text = self.font.render(
             f"HP: {int(self.player.health)}/{self.player.max_health}",
             True,
-            self.ui_config.text_color
+            self.ui_config.text_color,
         )
         self.screen.blit(health_text, (bar_x + bar_width + 10, bar_y))
 

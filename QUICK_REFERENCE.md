@@ -17,7 +17,7 @@ Shift+Tab         # Cycle modes (normal/plan/auto-accept)
 /compact          # Free context (at 70%+)
 ```
 
-### Skills & Agents  
+### Skills & Agents
 ```bash
 /skills           # List available Skills
 /agents           # Manage subagents

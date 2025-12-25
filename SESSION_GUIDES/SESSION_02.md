@@ -1,7 +1,7 @@
 # Session 02: Zombies & Combat
 
-**Phase:** 1 - Foundation  
-**Duration:** 2-3 hours  
+**Phase:** 1 - Foundation
+**Duration:** 2-3 hours
 **Prerequisites:** Session 1 completed
 
 ## Goals

@@ -1,8 +1,8 @@
 # TODO - Zombie Survival Game
 
-**Last Updated:** Session 2 (70% Complete)
+**Last Updated:** Session 2.5 (COMPLETE) - December 25, 2024
 
-## Session 2 Tasks (Ongoing - 70% Complete)
+## Session 2 Tasks ✅ COMPLETE
 
 ### Completed ✅
 - [x] Create centralized config system (src/config.py)
@@ -31,22 +31,44 @@
 - [x] Add ref.tools MCP server for docs lookup
 - [x] **VERIFIED** all pygame APIs before implementing ✅
 
-### Remaining ❌
-- [ ] Create ARCHITECTURE.md documenting game structure
-- [ ] Implement melee combat system
-  - [ ] SPACE key to attack
-  - [ ] Attack range (50 pixels)
-  - [ ] Attack cooldown (0.5 seconds)
-  - [ ] Kill zombies in attack range
-- [ ] Implement zombie spawning system
-  - [ ] Multiple zombies (currently only 1 hardcoded)
-  - [ ] Random spawn positions off-screen
-  - [ ] Wave-based spawning (progressive difficulty)
+- [x] Create ARCHITECTURE.md documenting game structure
+- [x] Implement melee combat system
+  - [x] SPACE key to attack
+  - [x] Attack range (50 pixels)
+  - [x] Attack cooldown (0.5 seconds)
+  - [x] Kill zombies in attack range
+- [x] Implement zombie spawning system
+  - [x] Multiple zombies (3 initial zombies)
+  - [x] Random spawn positions off-screen (all 4 sides)
+  - [ ] Wave-based spawning (progressive difficulty) - DEFERRED to Session 3
 
-## Future Sessions
-- Session 3: Skills creation, Subagents introduction
-- Session 4+: Advanced features, MCP integration
-- (Will be filled in as we progress)
+## Session 2.5 Tasks ✅ COMPLETE
+
+### Modern Development Tooling
+- [x] Ruff linting + formatting
+- [x] mypy type checking
+- [x] pytest with 6 initial tests (43% coverage)
+- [x] pytest-cov for coverage reporting
+- [x] pre-commit hooks (automated quality checks)
+- [x] GitHub Actions CI/CD pipeline
+- [x] Dependabot for dependency updates
+- [x] .editorconfig for editor consistency
+- [x] Code refactored with guard clauses
+- [x] All type hints fixed for mypy compliance
+
+## Session 3 Tasks (Next Up)
+
+### Game Features
+- [ ] Wave-based zombie spawning system (progressive difficulty)
+- [ ] Score/kill counter display
+- [ ] Game states system (Menu, Playing, Game Over)
+- [ ] Restart functionality (game over screen)
+- [ ] Increase test coverage beyond 43%
+
+### Agentic Concepts to Learn
+- [ ] Context management techniques
+- [ ] Advanced verification protocols
+- [ ] Documentation patterns (update PROGRESS.md)
 
 ## Completed ✓
 

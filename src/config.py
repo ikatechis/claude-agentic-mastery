@@ -2,12 +2,14 @@
 Game configuration using dataclasses
 All tunable game parameters organized by component
 """
+
 from dataclasses import dataclass
 
 
 @dataclass
 class GameConfig:
     """Main game settings"""
+
     screen_width: int = 800
     screen_height: int = 600
     fps: int = 60
@@ -19,6 +21,7 @@ class GameConfig:
 @dataclass
 class PlayerConfig:
     """Player entity settings"""
+
     radius: int = 15
     color: tuple = (0, 255, 0)  # Green
     speed: int = 200  # Pixels per second
@@ -31,6 +34,7 @@ class PlayerConfig:
 @dataclass
 class ZombieConfig:
     """Zombie entity settings"""
+
     radius: int = 12
     color: tuple = (200, 50, 50)  # Red
     speed: int = 80  # Pixels per second
@@ -40,6 +44,7 @@ class ZombieConfig:
 @dataclass
 class UIConfig:
     """UI/HUD settings (all positions as ratios of screen dimensions)"""
+
     # Health bar positioning (relative to screen size)
     health_bar_x_ratio: float = 0.0125  # 1.25% from left edge
     health_bar_y_ratio: float = 0.0167  # 1.67% from top edge

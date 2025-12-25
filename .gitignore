@@ -27,3 +27,21 @@ Thumbs.db
 
 # Game assets (if large)
 # assets/
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# pytest
+.pytest_cache/
+
+# ruff
+.ruff_cache/

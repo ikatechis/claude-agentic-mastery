@@ -2,7 +2,9 @@
 Player entity for Zombie Survival game
 Handles player movement, rendering, and collision
 """
+
 import pygame
+
 from config import player_config
 
 
@@ -38,13 +40,13 @@ class Player(pygame.sprite.Sprite):
 
         # Health system
         self.max_health = self.config.max_health
-        self.health = self.max_health
-        self.damage_cooldown = 0  # Seconds until can take damage again
+        self.health: float = float(self.max_health)
+        self.damage_cooldown = 0.0  # Seconds until can take damage again
         self.damage_cooldown_time = self.config.damage_cooldown
 
         # Attack system
         self.attack_range = self.config.attack_range
-        self.attack_cooldown = 0  # Seconds until can attack again
+        self.attack_cooldown = 0.0  # Seconds until can attack again
         self.attack_cooldown_time = self.config.attack_cooldown
         self.is_attacking = False  # True during attack frame
 
@@ -72,10 +74,9 @@ class Player(pygame.sprite.Sprite):
         if keys[pygame.K_SPACE] and self.attack_cooldown <= 0:
             self.attack()
 
-
         # Calculate movement delta
-        dx = 0
-        dy = 0
+        dx = 0.0
+        dy = 0.0
 
         if keys[pygame.K_w]:
             dy -= 1
@@ -110,7 +111,7 @@ class Player(pygame.sprite.Sprite):
         """
         if self.damage_cooldown <= 0:
             self.health -= amount
-            self.health = max(0, self.health)  # Don't go below 0
+            self.health = max(0.0, self.health)  # Don't go below 0
             self.damage_cooldown = self.damage_cooldown_time
             return True
         return False

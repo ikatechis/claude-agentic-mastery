@@ -1,7 +1,7 @@
 # Session 01: Foundation & First Code
 
-**Phase:** 1 - Foundation  
-**Duration:** 2-3 hours  
+**Phase:** 1 - Foundation
+**Duration:** 2-3 hours
 **Prerequisites:** Claude Code installed, basic Python knowledge
 
 ---
@@ -273,7 +273,7 @@ Creating player code now...
 > I need to verify:
 > - [ ] Player appears as a green circle at center
 > - [ ] W key moves player up
-> - [ ] S key moves player down  
+> - [ ] S key moves player down
 > - [ ] A key moves player left
 > - [ ] D key moves player right
 > - [ ] Diagonal movement works (W+A, etc.)

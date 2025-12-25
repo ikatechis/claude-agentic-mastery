@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Top-down zombie survival game built with pygame - learning project for mastering agentic coding"
 requires-python = ">=3.11.5"
 dependencies = [
-    "pygame==2.6.0",
+    "pygame==2.6.1",
 ]
 
 [dependency-groups]

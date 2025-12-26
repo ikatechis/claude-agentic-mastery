@@ -210,7 +210,22 @@ Building through 15 sessions to learn:
 - ✅ Player with WASD movement
 - ✅ Verification protocol established
 
-**Next Session:** Add zombies, collision, combat
+**Session 2 Complete:**
+- ✅ Zombie entities with chase AI
+- ✅ Circle-based collision detection
+- ✅ Health system with damage cooldown
+- ✅ Melee combat (SPACE key, attack range)
+- ✅ Zombie spawning system (off-screen, random sides)
+- ✅ Visual health bar UI
+- ✅ Centralized config system (dataclasses)
+
+**Session 2.5 Complete:**
+- ✅ Modern dev tooling (ruff, mypy, pytest)
+- ✅ Pre-commit hooks + GitHub Actions CI/CD
+- ✅ Test infrastructure (6 tests, 43% coverage)
+- ✅ Code quality automation
+
+**Next Session:** Wave-based spawning, score counter, game states
 
 ## Remember
 

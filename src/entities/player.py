@@ -6,6 +6,7 @@ Handles player movement, rendering, and collision
 import pygame
 
 from config import player_config
+from utils import load_sprite
 
 
 class Player(pygame.sprite.Sprite):
@@ -49,6 +50,16 @@ class Player(pygame.sprite.Sprite):
         self.attack_cooldown = 0.0  # Seconds until can attack again
         self.attack_cooldown_time = self.config.attack_cooldown
         self.is_attacking = False  # True during attack frame
+
+        # Sprite loading (fallback to circle if sprite fails)
+        sprite_size = self.radius * 2
+        self.sprite_image = load_sprite(self.config.sprite_path, sprite_size)
+
+        # Rotation state
+        self.angle = 0.0  # Start facing RIGHT (sprite default orientation)
+        self.original_sprite = None
+        if self.sprite_image:
+            self.original_sprite = self.sprite_image.copy()
 
     def update(self, delta_time):
         """Update player state
@@ -100,6 +111,34 @@ class Player(pygame.sprite.Sprite):
         self.x = max(self.radius, min(self.x, self.screen_width - self.radius))
         self.y = max(self.radius, min(self.y, self.screen_height - self.radius))
 
+        # Calculate target rotation from movement
+        if dx != 0 or dy != 0:
+            # atan2(-dy, dx) accounts for inverted Y-axis in pygame
+            import math
+
+            target_angle = math.degrees(math.atan2(-dy, dx))
+            target_angle = target_angle % 360
+
+            # Smooth rotation (720°/sec = 2 full rotations per second)
+            rotation_speed = 720.0
+            angle_diff = target_angle - self.angle
+
+            # Shortest rotation path (handle 359° -> 1° wrap)
+            if angle_diff > 180:
+                angle_diff -= 360
+            elif angle_diff < -180:
+                angle_diff += 360
+
+            # Apply rotation
+            max_rotation = rotation_speed * delta_time
+            if abs(angle_diff) < max_rotation:
+                self.angle = target_angle
+            else:
+                self.angle += max_rotation if angle_diff > 0 else -max_rotation
+
+            self.angle = self.angle % 360
+        # When idle (dx==0, dy==0), keep last angle
+
     def take_damage(self, amount):
         """Apply damage to the player.
 
@@ -134,9 +173,20 @@ class Player(pygame.sprite.Sprite):
         self.attack_cooldown = self.attack_cooldown_time
 
     def render(self, screen):
-        """Draw the player
+        """Draw the player with rotation
 
         Args:
             screen: Pygame surface to draw on
         """
-        pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius)
+        if self.original_sprite:
+            # Rotate from original (avoid degradation)
+            rotated_sprite = pygame.transform.rotate(self.original_sprite, self.angle)
+            rect = rotated_sprite.get_rect(center=(int(self.x), int(self.y)))
+            screen.blit(rotated_sprite, rect)
+        elif self.sprite_image:
+            # Fallback without rotation
+            rect = self.sprite_image.get_rect(center=(int(self.x), int(self.y)))
+            screen.blit(self.sprite_image, rect)
+        else:
+            # Circle fallback
+            pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius)

@@ -1,6 +1,8 @@
 """
 Game configuration using dataclasses
 All tunable game parameters organized by component
+
+Last Updated: Session 3 - Wave-based spawning, score system, game states
 """
 
 from dataclasses import dataclass
@@ -14,7 +16,6 @@ class GameConfig:
     screen_height: int = 600
     fps: int = 60
     background_color: tuple = (50, 50, 50)  # Dark gray
-    initial_zombies: int = 3  # Number of zombies at game start
     spawn_offscreen_buffer: int = 50  # Distance off-screen for spawning
 
 
@@ -29,6 +30,7 @@ class PlayerConfig:
     damage_cooldown: float = 1.0  # Seconds between damage ticks
     attack_range: int = 50  # Pixels
     attack_cooldown: float = 0.5  # Seconds between attacks
+    sprite_path: str = "assets/sprites/player.png"
 
 
 @dataclass
@@ -39,6 +41,27 @@ class ZombieConfig:
     color: tuple = (200, 50, 50)  # Red
     speed: int = 80  # Pixels per second
     damage: int = 10  # Damage per hit
+    sprite_path: str = "assets/sprites/zombie.png"
+
+
+@dataclass
+class WaveConfig:
+    """Wave spawning system settings"""
+
+    initial_zombies: int = 3  # Wave 1 zombie count
+    zombies_per_wave_multiplier: float = 1.5  # Each wave multiplies by this
+    max_zombies_per_wave: int = 20  # Cap to prevent performance issues
+    wave_delay: float = 3.0  # Seconds between waves
+    spawn_interval: float = 0.5  # Seconds between individual spawns
+
+
+@dataclass
+class ScoreConfig:
+    """Score system settings"""
+
+    points_per_kill: int = 10  # Points awarded per zombie kill
+    score_x_ratio: float = 0.95  # 95% from left (right-aligned)
+    score_y_ratio: float = 0.0167  # Same height as health bar
 
 
 @dataclass
@@ -61,9 +84,39 @@ class UIConfig:
     font_size: int = 36
     text_color: tuple = (255, 255, 255)  # White
 
+    # Wave notifications
+    wave_notification_duration: float = 2.0  # Seconds to show "Wave X" message
+    wave_font_size: int = 72  # Larger font for wave notifications
+
+    # Visual effects
+    kill_flash_duration: float = 0.2  # Seconds to show kill flash effect
+    damage_popup_duration: float = 1.0  # Seconds to show damage popup
+
+
+@dataclass
+class KillFlash:
+    """Visual effect for zombie kills"""
+
+    x: float
+    y: float
+    radius: int
+    timer: float
+
+
+@dataclass
+class DamagePopup:
+    """Visual effect for damage numbers"""
+
+    x: float
+    y: float
+    text: str
+    timer: float
+
 
 # Global config instances
 game_config = GameConfig()
 player_config = PlayerConfig()
 zombie_config = ZombieConfig()
+wave_config = WaveConfig()
+score_config = ScoreConfig()
 ui_config = UIConfig()

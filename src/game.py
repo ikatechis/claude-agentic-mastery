@@ -3,14 +3,17 @@ Main game class for Zombie Survival
 Handles the game loop, rendering, and event processing
 """
 
+import contextlib
+import dataclasses
 import math
 import random
 
 import pygame
 
-from config import game_config, ui_config
+from config import DamagePopup, KillFlash, game_config, score_config, ui_config, wave_config
 from entities.player import Player
 from entities.zombie import Zombie
+from game_state import GameState
 
 
 class Game:
@@ -38,9 +41,23 @@ class Game:
         pygame.font.init()
         self.ui_config = ui_config
         self.font = pygame.font.Font(None, self.ui_config.font_size)
+        self.wave_font = pygame.font.Font(None, self.ui_config.wave_font_size)
 
-        # Game state
+        # Game state management
         self.running = True
+        self.state = GameState.MENU
+
+        # Wave system
+        self.wave_config = wave_config
+        self.current_wave = 0
+        self.zombies_to_spawn = 0
+        self.spawn_timer = 0.0
+        self.wave_delay_timer = 0.0
+        self.wave_notification_timer = 0.0
+
+        # Score tracking
+        self.score_config = score_config
+        self.score = 0
 
         # Create player at center of screen
         self.player = Player(
@@ -50,9 +67,14 @@ class Game:
         # Zombie management
         self.zombies = []
 
-        # Spawn initial zombies
-        for _ in range(self.config.initial_zombies):
-            self.spawn_zombie()
+        # Visual effects
+        self.damage_popups = []  # List of DamagePopup dataclasses
+        self.kill_flashes = []  # List of KillFlash dataclasses
+
+        # Background tile loading (fallback to solid color if fails)
+        self.background_tile = None
+        with contextlib.suppress(pygame.error, FileNotFoundError):
+            self.background_tile = pygame.image.load("assets/sprites/tile_background.png").convert()
 
     def handle_events(self):
         """Process game events"""
@@ -113,12 +135,79 @@ class Game:
 
         self.zombies.append(Zombie(x, y))
 
+    def calculate_wave_zombies(self, wave_number):
+        """Calculate how many zombies to spawn for a given wave.
+
+        Args:
+            wave_number: The wave number (1-indexed)
+
+        Returns:
+            int: Number of zombies to spawn (capped at max)
+        """
+        base = self.wave_config.initial_zombies
+        multiplier = self.wave_config.zombies_per_wave_multiplier
+        zombies = int(base * (multiplier ** (wave_number - 1)))
+        return min(zombies, self.wave_config.max_zombies_per_wave)
+
+    def start_wave(self):
+        """Initialize a new wave of zombies."""
+        self.current_wave += 1
+        self.zombies_to_spawn = self.calculate_wave_zombies(self.current_wave)
+        self.spawn_timer = 0.0
+        self.wave_notification_timer = self.ui_config.wave_notification_duration
+
+    def start_new_game(self):
+        """Reset game state for a new game."""
+        # Reset player
+        self.player = Player(
+            self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 2, self.SCREEN_WIDTH, self.SCREEN_HEIGHT
+        )
+
+        # Reset wave system
+        self.current_wave = 0
+        self.zombies = []
+        self.zombies_to_spawn = 0
+        self.wave_delay_timer = 0.0
+        self.wave_notification_timer = 0.0
+
+        # Reset score
+        self.score = 0
+
+        # Reset visual effects
+        self.damage_popups = []
+        self.kill_flashes = []
+
+        # Start first wave immediately
+        self.start_wave()
+
     def update(self, delta_time):
         """Update game state
 
         Args:
             delta_time: Time elapsed since last frame in seconds
         """
+        # Handle wave delay countdown (don't block other updates)
+        if self.wave_delay_timer > 0:
+            self.wave_delay_timer -= delta_time
+            if self.wave_delay_timer <= 0:
+                self.start_wave()
+
+        # Spawn zombies gradually (only if not in wave delay)
+        if self.wave_delay_timer <= 0 and self.zombies_to_spawn > 0:
+            self.spawn_timer -= delta_time
+            if self.spawn_timer <= 0:
+                self.spawn_zombie()
+                self.zombies_to_spawn -= 1
+                self.spawn_timer = self.wave_config.spawn_interval
+
+        # Check if wave complete (only if not already in delay)
+        if self.wave_delay_timer <= 0 and len(self.zombies) == 0 and self.zombies_to_spawn == 0:
+            self.wave_delay_timer = self.wave_config.wave_delay
+
+        # Update wave notification timer
+        if self.wave_notification_timer > 0:
+            self.wave_notification_timer -= delta_time
+
         # Update player
         self.player.update(delta_time)
 
@@ -132,8 +221,28 @@ class Game:
             survivors = []
             for zombie in self.zombies:
                 if self.get_distance(self.player, zombie) <= self.player.attack_range:
-                    # Zombie killed - future logic (score, sounds, etc.) goes here
-                    pass
+                    # Zombie killed - award points
+                    self.score += self.score_config.points_per_kill
+
+                    # Add visual effects
+                    # Flash effect at zombie position
+                    self.kill_flashes.append(
+                        KillFlash(
+                            x=zombie.x,
+                            y=zombie.y,
+                            radius=zombie.radius,
+                            timer=self.ui_config.kill_flash_duration,
+                        )
+                    )
+                    # Damage popup above zombie
+                    self.damage_popups.append(
+                        DamagePopup(
+                            x=zombie.x,
+                            y=zombie.y - 20,
+                            text=f"+{self.score_config.points_per_kill}",
+                            timer=self.ui_config.damage_popup_duration,
+                        )
+                    )
                 else:
                     survivors.append(zombie)
             self.zombies = survivors
@@ -143,29 +252,85 @@ class Game:
             if not self.check_collision(self.player, zombie):
                 continue
 
+            # Apply knockback - push zombie to collision boundary
+            distance = self.get_distance(self.player, zombie)
+            if distance > 0:  # Avoid division by zero
+                # Calculate direction from player to zombie
+                dx = zombie.x - self.player.x
+                dy = zombie.y - self.player.y
+                # Normalize direction
+                dx /= distance
+                dy /= distance
+                # Push zombie to collision boundary (sum of radii)
+                collision_dist = self.player.radius + zombie.radius
+                zombie.x = self.player.x + dx * collision_dist
+                zombie.y = self.player.y + dy * collision_dist
+
             # Apply damage to player
             if not self.player.take_damage(zombie.damage):
                 continue  # Damage on cooldown
 
             # Check if player died
             if not self.player.is_alive():
-                self.running = False
-                break
+                self.state = GameState.GAME_OVER
+                return
+
+        # Update visual effects
+        # Update kill flashes
+        self.kill_flashes = [
+            dataclasses.replace(flash, timer=flash.timer - delta_time)
+            for flash in self.kill_flashes
+            if flash.timer > 0
+        ]
+
+        # Update damage popups (move up and fade)
+        self.damage_popups = [
+            dataclasses.replace(popup, timer=popup.timer - delta_time, y=popup.y - 30 * delta_time)
+            for popup in self.damage_popups
+            if popup.timer > 0
+        ]
+
+    def render_background(self):
+        """Draw the background - either tiled or solid color"""
+        if self.background_tile:
+            # Draw tiled background
+            tile_width = self.background_tile.get_width()
+            tile_height = self.background_tile.get_height()
+            for x in range(0, self.SCREEN_WIDTH, tile_width):
+                for y in range(0, self.SCREEN_HEIGHT, tile_height):
+                    self.screen.blit(self.background_tile, (x, y))
+        else:
+            # Fallback to solid color
+            self.screen.fill(self.BACKGROUND_COLOR)
 
     def render(self):
         """Render the game"""
-        # Fill background
-        self.screen.fill(self.BACKGROUND_COLOR)
+        # Draw background
+        self.render_background()
 
         # Render all zombies
         for zombie in self.zombies:
             zombie.draw(self.screen)
 
+        # Render kill flash effects (on top of zombies)
+        self.render_kill_flashes()
+
+        # Render attack range (under player)
+        self.render_attack_range()
+
         # Render player (on top of zombies)
         self.player.render(self.screen)
 
-        # Render health bar
+        # Render attack cooldown (above player)
+        self.render_attack_cooldown()
+
+        # Render damage popups (floating text)
+        self.render_damage_popups()
+
+        # Render UI
         self.render_health_bar()
+        self.render_score()
+        self.render_wave_notification()
 
         # Update display
         pygame.display.flip()
@@ -207,20 +372,204 @@ class Game:
         )
         self.screen.blit(health_text, (bar_x + bar_width + 10, bar_y))
 
+    def render_score(self):
+        """Draw the current score in top-right corner."""
+        score_text = self.font.render(f"Score: {self.score}", True, self.ui_config.text_color)
+
+        # Right-align the score
+        text_rect = score_text.get_rect()
+        score_x = int(self.SCREEN_WIDTH * self.score_config.score_x_ratio) - text_rect.width
+        score_y = int(self.SCREEN_HEIGHT * self.score_config.score_y_ratio)
+
+        self.screen.blit(score_text, (score_x, score_y))
+
+    def render_wave_notification(self):
+        """Show 'Wave X' notification at start of each wave."""
+        if self.wave_notification_timer > 0:
+            wave_text = self.wave_font.render(f"Wave {self.current_wave}", True, (255, 255, 0))
+            text_rect = wave_text.get_rect(center=(self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 2))
+            self.screen.blit(wave_text, text_rect)
+
+    def render_attack_range(self):
+        """Show attack range circle when player is attacking."""
+        if self.player.is_attacking:
+            # Draw semi-transparent attack range circle
+            attack_surface = pygame.Surface(
+                (self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.SRCALPHA
+            )
+            # Yellow circle with 30% opacity
+            pygame.draw.circle(
+                attack_surface,
+                (255, 255, 0, 76),  # RGBA - 76 is ~30% of 255
+                (int(self.player.x), int(self.player.y)),
+                self.player.attack_range,
+                2,  # 2 pixel border width
+            )
+            self.screen.blit(attack_surface, (0, 0))
+
+    def render_attack_cooldown(self):
+        """Show attack cooldown bar below player."""
+        if self.player.attack_cooldown > 0:
+            # Bar position: centered below player
+            bar_width = 40
+            bar_height = 4
+            bar_x = int(self.player.x - bar_width // 2)
+            bar_y = int(self.player.y + self.player.radius + 5)
+
+            # Background (gray)
+            pygame.draw.rect(self.screen, (100, 100, 100), (bar_x, bar_y, bar_width, bar_height))
+
+            # Foreground (cooldown progress - orange)
+            cooldown_ratio = self.player.attack_cooldown / self.player.attack_cooldown_time
+            cooldown_width = int(bar_width * cooldown_ratio)
+            pygame.draw.rect(self.screen, (255, 165, 0), (bar_x, bar_y, cooldown_width, bar_height))
+
+    def render_kill_flashes(self):
+        """Render white flash effects where zombies were killed."""
+        for flash in self.kill_flashes:
+            # Flash intensity based on remaining timer
+            alpha = int(255 * (flash.timer / self.ui_config.kill_flash_duration))
+            # Clamp alpha to valid range [0, 255]
+            alpha = max(0, min(255, alpha))
+            # Draw white circle with fading alpha
+            flash_surface = pygame.Surface((self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.SRCALPHA)
+            pygame.draw.circle(
+                flash_surface,
+                (255, 255, 255, alpha),
+                (int(flash.x), int(flash.y)),
+                int(flash.radius),
+            )
+            self.screen.blit(flash_surface, (0, 0))
+
+    def render_damage_popups(self):
+        """Render floating damage numbers."""
+        for popup in self.damage_popups:
+            # Fade out based on remaining timer
+            alpha_ratio = popup.timer / self.ui_config.damage_popup_duration
+            color = (255, 255, 0)  # Yellow
+
+            # Render text with fade
+            text = self.font.render(popup.text, True, color)
+            text_rect = text.get_rect(center=(int(popup.x), int(popup.y)))
+
+            # Apply alpha to surface
+            text.set_alpha(int(255 * alpha_ratio))
+            self.screen.blit(text, text_rect)
+
+    def handle_menu_events(self):
+        """Handle events in MENU state."""
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    self.running = False
+                elif event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
+                    # Start new game
+                    self.start_new_game()
+                    self.state = GameState.PLAYING
+                elif event.key == pygame.K_q:
+                    self.running = False
+
+    def render_menu(self):
+        """Render the main menu screen."""
+        self.render_background()
+
+        # Title
+        title_text = self.wave_font.render("ZOMBIE SURVIVAL", True, (255, 0, 0))
+        title_rect = title_text.get_rect(center=(self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 3))
+        self.screen.blit(title_text, title_rect)
+
+        # Instructions
+        instructions = [
+            "Press ENTER or SPACE to Start",
+            "Press Q or ESC to Quit",
+            "",
+            "Controls: WASD to move, SPACE to attack",
+        ]
+
+        y_offset = self.SCREEN_HEIGHT // 2
+        for instruction in instructions:
+            text = self.font.render(instruction, True, self.ui_config.text_color)
+            text_rect = text.get_rect(center=(self.SCREEN_WIDTH // 2, y_offset))
+            self.screen.blit(text, text_rect)
+            y_offset += 40
+
+        pygame.display.flip()
+
+    def handle_game_over_events(self):
+        """Handle events in GAME_OVER state."""
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE or event.key == pygame.K_q:
+                    self.running = False
+                elif event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
+                    # Restart game
+                    self.start_new_game()
+                    self.state = GameState.PLAYING
+                elif event.key == pygame.K_m:
+                    # Return to menu
+                    self.state = GameState.MENU
+
+    def render_game_over(self):
+        """Render the game over screen."""
+        self.render_background()
+
+        # Game Over title
+        title_text = self.wave_font.render("GAME OVER", True, (255, 0, 0))
+        title_rect = title_text.get_rect(center=(self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 3))
+        self.screen.blit(title_text, title_rect)
+
+        # Final score
+        score_text = self.wave_font.render(f"Final Score: {self.score}", True, (255, 255, 0))
+        score_rect = score_text.get_rect(center=(self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 2))
+        self.screen.blit(score_text, score_rect)
+
+        # Wave reached
+        wave_text = self.font.render(
+            f"Wave Reached: {self.current_wave}", True, self.ui_config.text_color
+        )
+        wave_rect = wave_text.get_rect(
+            center=(self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 2 + 60)
+        )
+        self.screen.blit(wave_text, wave_rect)
+
+        # Instructions
+        instructions = [
+            "",
+            "Press ENTER to Restart",
+            "Press M for Main Menu",
+            "Press Q or ESC to Quit",
+        ]
+
+        y_offset = self.SCREEN_HEIGHT // 2 + 120
+        for instruction in instructions:
+            text = self.font.render(instruction, True, self.ui_config.text_color)
+            text_rect = text.get_rect(center=(self.SCREEN_WIDTH // 2, y_offset))
+            self.screen.blit(text, text_rect)
+            y_offset += 35
+
+        pygame.display.flip()
+
     def run(self):
-        """Main game loop"""
+        """Main game loop with state machine"""
         while self.running:
             # Get delta time in seconds
             delta_time = self.clock.tick(self.FPS) / 1000.0
 
-            # Process events
-            self.handle_events()
-
-            # Update game state
-            self.update(delta_time)
-
-            # Render
-            self.render()
+            # State-based event handling and rendering
+            if self.state == GameState.MENU:
+                self.handle_menu_events()
+                self.render_menu()
+            elif self.state == GameState.PLAYING:
+                self.handle_events()
+                self.update(delta_time)
+                self.render()
+            elif self.state == GameState.GAME_OVER:
+                self.handle_game_over_events()
+                self.render_game_over()
 
         # Cleanup
         pygame.quit()

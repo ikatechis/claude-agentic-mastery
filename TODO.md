@@ -1,8 +1,8 @@
 # TODO - Zombie Survival Game
 
-**Last Updated:** Session 2 (70% Complete)
+**Last Updated:** Session 2.5 (COMPLETE) - December 25, 2024
 
-## Session 2 Tasks (Ongoing - 70% Complete)
+## Session 2 Tasks ✅ COMPLETE
 
 ### Completed ✅
 - [x] Create centralized config system (src/config.py)
@@ -31,22 +31,74 @@
 - [x] Add ref.tools MCP server for docs lookup
 - [x] **VERIFIED** all pygame APIs before implementing ✅
 
-### Remaining ❌
-- [ ] Create ARCHITECTURE.md documenting game structure
-- [ ] Implement melee combat system
-  - [ ] SPACE key to attack
-  - [ ] Attack range (50 pixels)
-  - [ ] Attack cooldown (0.5 seconds)
-  - [ ] Kill zombies in attack range
-- [ ] Implement zombie spawning system
-  - [ ] Multiple zombies (currently only 1 hardcoded)
-  - [ ] Random spawn positions off-screen
-  - [ ] Wave-based spawning (progressive difficulty)
+- [x] Create ARCHITECTURE.md documenting game structure
+- [x] Implement melee combat system
+  - [x] SPACE key to attack
+  - [x] Attack range (50 pixels)
+  - [x] Attack cooldown (0.5 seconds)
+  - [x] Kill zombies in attack range
+- [x] Implement zombie spawning system
+  - [x] Multiple zombies (3 initial zombies)
+  - [x] Random spawn positions off-screen (all 4 sides)
+  - [ ] Wave-based spawning (progressive difficulty) - DEFERRED to Session 3
 
-## Future Sessions
-- Session 3: Skills creation, Subagents introduction
-- Session 4+: Advanced features, MCP integration
-- (Will be filled in as we progress)
+## Session 2.5 Tasks ✅ COMPLETE
+
+### Modern Development Tooling
+- [x] Ruff linting + formatting
+- [x] mypy type checking
+- [x] pytest with 6 initial tests (43% coverage)
+- [x] pytest-cov for coverage reporting
+- [x] pre-commit hooks (automated quality checks)
+- [x] GitHub Actions CI/CD pipeline
+- [x] Dependabot for dependency updates
+- [x] .editorconfig for editor consistency
+- [x] Code refactored with guard clauses
+- [x] All type hints fixed for mypy compliance
+
+## Session 3 Tasks ✅ COMPLETE
+
+### Game Features (from earlier in session)
+- [x] Wave-based zombie spawning system (progressive difficulty)
+- [x] Score/kill counter display
+- [x] Game states system (Menu, Playing, Game Over)
+- [x] Restart functionality (game over screen)
+
+## Session 3+ Tasks ✅ COMPLETE
+
+### Sprite Integration & Polish
+- [x] Integrate professional sprite assets (Kenney pack)
+- [x] AI-generated sprite alternatives (Pollinations)
+- [x] Sprite rotation following movement direction
+- [x] Wave delay movement fix (player can move during delays)
+- [x] Background tiling system
+
+### Code Quality & Refactoring
+- [x] Extract sprite loading to utils.py (DRY principle)
+- [x] Move sprite paths to config
+- [x] Replace dict-based effects with dataclasses
+- [x] Move magic numbers to UIConfig
+- [x] Test refactoring (1-1 file correspondence)
+- [x] Create python-testing skill
+- [x] Increase test coverage to 53%
+
+### MCP & Tooling
+- [x] Pollinations MCP server integration
+- [x] AI asset generation capabilities
+
+## Session 4 Tasks (Next Up)
+
+### Game Features
+- [ ] Power-ups system (health packs, speed boosts)
+- [ ] Different zombie types (faster, stronger variants)
+- [ ] Sound effects and music
+- [ ] Particle effects for kills/hits
+- [ ] Increase test coverage beyond 53%
+
+### Agentic Concepts to Learn
+- [ ] Advanced subagent patterns
+- [ ] Complex MCP workflows
+- [ ] Skill composition
 
 ## Completed ✓
 

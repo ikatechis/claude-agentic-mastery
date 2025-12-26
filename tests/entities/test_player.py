@@ -1,7 +1,6 @@
-"""Tests for game entities"""
+"""Tests for player entity (src/entities/player.py)"""
 
 from entities.player import Player
-from entities.zombie import Zombie
 
 
 class TestPlayer:
@@ -38,27 +37,3 @@ class TestPlayer:
         player.attack()
         assert player.is_attacking is True
         assert player.attack_cooldown > 0
-
-
-class TestZombie:
-    """Test zombie entity"""
-
-    def test_zombie_initialization(self):
-        """Test zombie is created with correct defaults"""
-        zombie = Zombie(100, 200)
-        assert zombie.x == 100
-        assert zombie.y == 200
-        assert zombie.speed == 80
-        assert zombie.damage == 10
-
-    def test_zombie_movement(self):
-        """Test zombie moves toward player"""
-        zombie = Zombie(0, 0)
-        initial_x = zombie.x
-        initial_y = zombie.y
-
-        # Player at (100, 100), zombie should move toward them
-        zombie.update(1.0, 100, 100)
-
-        assert zombie.x > initial_x  # Moved right
-        assert zombie.y > initial_y  # Moved down

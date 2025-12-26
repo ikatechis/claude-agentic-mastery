@@ -65,6 +65,10 @@ class Game:
         # Zombie management
         self.zombies = []
 
+        # Visual effects
+        self.damage_popups = []  # List of {"x", "y", "text", "timer"}
+        self.kill_flashes = []  # List of {"x", "y", "radius", "timer"}
+
     def handle_events(self):
         """Process game events"""
         for event in pygame.event.get():
@@ -162,6 +166,10 @@ class Game:
         # Reset score
         self.score = 0
 
+        # Reset visual effects
+        self.damage_popups = []
+        self.kill_flashes = []
+
         # Start first wave immediately
         self.start_wave()
 
@@ -209,6 +217,21 @@ class Game:
                 if self.get_distance(self.player, zombie) <= self.player.attack_range:
                     # Zombie killed - award points
                     self.score += self.score_config.points_per_kill
+
+                    # Add visual effects
+                    # Flash effect at zombie position
+                    self.kill_flashes.append(
+                        {"x": zombie.x, "y": zombie.y, "radius": zombie.radius, "timer": 0.15}
+                    )
+                    # Damage popup above zombie
+                    self.damage_popups.append(
+                        {
+                            "x": zombie.x,
+                            "y": zombie.y - 20,
+                            "text": f"+{self.score_config.points_per_kill}",
+                            "timer": 0.5,
+                        }
+                    )
                 else:
                     survivors.append(zombie)
             self.zombies = survivors
@@ -217,6 +240,20 @@ class Game:
         for zombie in self.zombies:
             if not self.check_collision(self.player, zombie):
                 continue
+
+            # Apply knockback - push zombie to collision boundary
+            distance = self.get_distance(self.player, zombie)
+            if distance > 0:  # Avoid division by zero
+                # Calculate direction from player to zombie
+                dx = zombie.x - self.player.x
+                dy = zombie.y - self.player.y
+                # Normalize direction
+                dx /= distance
+                dy /= distance
+                # Push zombie to collision boundary (sum of radii)
+                collision_dist = self.player.radius + zombie.radius
+                zombie.x = self.player.x + dx * collision_dist
+                zombie.y = self.player.y + dy * collision_dist
 
             # Apply damage to player
             if not self.player.take_damage(zombie.damage):
@@ -227,6 +264,21 @@ class Game:
                 self.state = GameState.GAME_OVER
                 return
 
+        # Update visual effects
+        # Update kill flashes
+        self.kill_flashes = [
+            {**flash, "timer": flash["timer"] - delta_time}
+            for flash in self.kill_flashes
+            if flash["timer"] > 0
+        ]
+
+        # Update damage popups (move up and fade)
+        self.damage_popups = [
+            {**popup, "timer": popup["timer"] - delta_time, "y": popup["y"] - 30 * delta_time}
+            for popup in self.damage_popups
+            if popup["timer"] > 0
+        ]
+
     def render(self):
         """Render the game"""
         # Fill background
@@ -236,8 +288,20 @@ class Game:
         for zombie in self.zombies:
             zombie.draw(self.screen)
 
+        # Render kill flash effects (on top of zombies)
+        self.render_kill_flashes()
+
+        # Render attack range (under player)
+        self.render_attack_range()
+
         # Render player (on top of zombies)
         self.player.render(self.screen)
+
+        # Render attack cooldown (above player)
+        self.render_attack_cooldown()
+
+        # Render damage popups (floating text)
+        self.render_damage_popups()
 
         # Render UI
         self.render_health_bar()
@@ -301,6 +365,70 @@ class Game:
             wave_text = self.wave_font.render(f"Wave {self.current_wave}", True, (255, 255, 0))
             text_rect = wave_text.get_rect(center=(self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 2))
             self.screen.blit(wave_text, text_rect)
+
+    def render_attack_range(self):
+        """Show attack range circle when player is attacking."""
+        if self.player.is_attacking:
+            # Draw semi-transparent attack range circle
+            attack_surface = pygame.Surface(
+                (self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.SRCALPHA
+            )
+            # Yellow circle with 30% opacity
+            pygame.draw.circle(
+                attack_surface,
+                (255, 255, 0, 76),  # RGBA - 76 is ~30% of 255
+                (int(self.player.x), int(self.player.y)),
+                self.player.attack_range,
+                2,  # 2 pixel border width
+            )
+            self.screen.blit(attack_surface, (0, 0))
+
+    def render_attack_cooldown(self):
+        """Show attack cooldown bar below player."""
+        if self.player.attack_cooldown > 0:
+            # Bar position: centered below player
+            bar_width = 40
+            bar_height = 4
+            bar_x = int(self.player.x - bar_width // 2)
+            bar_y = int(self.player.y + self.player.radius + 5)
+
+            # Background (gray)
+            pygame.draw.rect(self.screen, (100, 100, 100), (bar_x, bar_y, bar_width, bar_height))
+
+            # Foreground (cooldown progress - orange)
+            cooldown_ratio = self.player.attack_cooldown / self.player.attack_cooldown_time
+            cooldown_width = int(bar_width * cooldown_ratio)
+            pygame.draw.rect(self.screen, (255, 165, 0), (bar_x, bar_y, cooldown_width, bar_height))
+
+    def render_kill_flashes(self):
+        """Render white flash effects where zombies were killed."""
+        for flash in self.kill_flashes:
+            # Flash intensity based on remaining timer
+            alpha = int(255 * (flash["timer"] / 0.15))  # 0.15s is initial timer
+            # Draw white circle with fading alpha
+            flash_surface = pygame.Surface((self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.SRCALPHA)
+            pygame.draw.circle(
+                flash_surface,
+                (255, 255, 255, alpha),
+                (int(flash["x"]), int(flash["y"])),
+                int(flash["radius"]),
+            )
+            self.screen.blit(flash_surface, (0, 0))
+
+    def render_damage_popups(self):
+        """Render floating damage numbers."""
+        for popup in self.damage_popups:
+            # Fade out based on remaining timer
+            alpha_ratio = popup["timer"] / 0.5  # 0.5s is initial timer
+            color = (255, 255, 0)  # Yellow
+
+            # Render text with fade
+            text = self.font.render(popup["text"], True, color)
+            text_rect = text.get_rect(center=(int(popup["x"]), int(popup["y"])))
+
+            # Apply alpha to surface
+            text.set_alpha(int(255 * alpha_ratio))
+            self.screen.blit(text, text_rect)
 
     def handle_menu_events(self):
         """Handle events in MENU state."""

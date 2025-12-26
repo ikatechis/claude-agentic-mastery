@@ -65,14 +65,13 @@ class Powerup:
 
     def _get_sprite_path(self) -> str:
         """Get the sprite path for this power-up type."""
-        # For now, we'll use placeholder paths
-        # These can be replaced with actual sprite assets later
+        # AI-generated sprites from Pollinations (32x32 pixel art)
         if self.powerup_type == PowerupType.HEALTH:
-            return "assets/sprites/powerup_health.png"
+            return "assets/sprites/powerup_health.png"  # Green health potion/cross
         elif self.powerup_type == PowerupType.SPEED:
-            return "assets/sprites/powerup_speed.png"
+            return "assets/sprites/powerup_speed.png"  # Cyan lightning bolt
         else:  # SHIELD
-            return "assets/sprites/powerup_shield.png"
+            return "assets/sprites/powerup_shield.png"  # Golden shield
 
     def update(self, delta_time: float) -> bool:
         """Update power-up state (lifetime countdown, blink animation).

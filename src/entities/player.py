@@ -3,6 +3,8 @@ Player entity for Zombie Survival game
 Handles player movement, rendering, and collision
 """
 
+import contextlib
+
 import pygame
 
 from config import player_config
@@ -49,6 +51,16 @@ class Player(pygame.sprite.Sprite):
         self.attack_cooldown = 0.0  # Seconds until can attack again
         self.attack_cooldown_time = self.config.attack_cooldown
         self.is_attacking = False  # True during attack frame
+
+        # Sprite loading (fallback to circle if sprite fails)
+        self.sprite_image = None
+        with contextlib.suppress(pygame.error, FileNotFoundError):
+            self.sprite_image = pygame.image.load("assets/sprites/player.png").convert_alpha()
+            # Scale to appropriate size (roughly 2x the radius for visible area)
+            sprite_size = self.radius * 2
+            self.sprite_image = pygame.transform.scale(
+                self.sprite_image, (int(sprite_size), int(sprite_size))
+            )
 
     def update(self, delta_time):
         """Update player state
@@ -139,4 +151,10 @@ class Player(pygame.sprite.Sprite):
         Args:
             screen: Pygame surface to draw on
         """
-        pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius)
+        if self.sprite_image:
+            # Draw sprite centered on position
+            rect = self.sprite_image.get_rect(center=(int(self.x), int(self.y)))
+            screen.blit(self.sprite_image, rect)
+        else:
+            # Fallback to circle if sprite not loaded
+            pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius)

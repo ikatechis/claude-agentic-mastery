@@ -3,6 +3,7 @@ Main game class for Zombie Survival
 Handles the game loop, rendering, and event processing
 """
 
+import contextlib
 import math
 import random
 
@@ -68,6 +69,11 @@ class Game:
         # Visual effects
         self.damage_popups = []  # List of {"x", "y", "text", "timer"}
         self.kill_flashes = []  # List of {"x", "y", "radius", "timer"}
+
+        # Background tile loading (fallback to solid color if fails)
+        self.background_tile = None
+        with contextlib.suppress(pygame.error, FileNotFoundError):
+            self.background_tile = pygame.image.load("assets/sprites/tile_background.png").convert()
 
     def handle_events(self):
         """Process game events"""
@@ -279,10 +285,23 @@ class Game:
             if popup["timer"] > 0
         ]
 
+    def render_background(self):
+        """Draw the background - either tiled or solid color"""
+        if self.background_tile:
+            # Draw tiled background
+            tile_width = self.background_tile.get_width()
+            tile_height = self.background_tile.get_height()
+            for x in range(0, self.SCREEN_WIDTH, tile_width):
+                for y in range(0, self.SCREEN_HEIGHT, tile_height):
+                    self.screen.blit(self.background_tile, (x, y))
+        else:
+            # Fallback to solid color
+            self.screen.fill(self.BACKGROUND_COLOR)
+
     def render(self):
         """Render the game"""
-        # Fill background
-        self.screen.fill(self.BACKGROUND_COLOR)
+        # Draw background
+        self.render_background()
 
         # Render all zombies
         for zombie in self.zombies:
@@ -405,6 +424,8 @@ class Game:
         for flash in self.kill_flashes:
             # Flash intensity based on remaining timer
             alpha = int(255 * (flash["timer"] / 0.15))  # 0.15s is initial timer
+            # Clamp alpha to valid range [0, 255]
+            alpha = max(0, min(255, alpha))
             # Draw white circle with fading alpha
             flash_surface = pygame.Surface((self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.SRCALPHA)
             pygame.draw.circle(
@@ -447,7 +468,7 @@ class Game:
 
     def render_menu(self):
         """Render the main menu screen."""
-        self.screen.fill(self.BACKGROUND_COLOR)
+        self.render_background()
 
         # Title
         title_text = self.wave_font.render("ZOMBIE SURVIVAL", True, (255, 0, 0))
@@ -489,7 +510,7 @@ class Game:
 
     def render_game_over(self):
         """Render the game over screen."""
-        self.screen.fill(self.BACKGROUND_COLOR)
+        self.render_background()
 
         # Game Over title
         title_text = self.wave_font.render("GAME OVER", True, (255, 0, 0))

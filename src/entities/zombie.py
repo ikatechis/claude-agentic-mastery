@@ -1,3 +1,4 @@
+import contextlib
 import math
 
 import pygame
@@ -27,6 +28,16 @@ class Zombie:
         self.color = self.config.color
         self.speed = self.config.speed
         self.damage = self.config.damage
+
+        # Sprite loading (fallback to circle if sprite fails)
+        self.sprite_image = None
+        with contextlib.suppress(pygame.error, FileNotFoundError):
+            self.sprite_image = pygame.image.load("assets/sprites/zombie.png").convert_alpha()
+            # Scale to appropriate size (roughly 2x the radius for visible area)
+            sprite_size = self.radius * 2
+            self.sprite_image = pygame.transform.scale(
+                self.sprite_image, (int(sprite_size), int(sprite_size))
+            )
 
     def update(self, delta_time, player_x, player_y):
         """Update zombie state - chase the player.
@@ -59,4 +70,10 @@ class Zombie:
         Args:
             screen: Pygame surface to draw on
         """
-        pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius)
+        if self.sprite_image:
+            # Draw sprite centered on position
+            rect = self.sprite_image.get_rect(center=(int(self.x), int(self.y)))
+            screen.blit(self.sprite_image, rect)
+        else:
+            # Fallback to circle if sprite not loaded
+            pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius)

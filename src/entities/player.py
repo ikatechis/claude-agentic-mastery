@@ -3,11 +3,10 @@ Player entity for Zombie Survival game
 Handles player movement, rendering, and collision
 """
 
-import contextlib
-
 import pygame
 
 from config import player_config
+from utils import load_sprite
 
 
 class Player(pygame.sprite.Sprite):
@@ -53,14 +52,8 @@ class Player(pygame.sprite.Sprite):
         self.is_attacking = False  # True during attack frame
 
         # Sprite loading (fallback to circle if sprite fails)
-        self.sprite_image = None
-        with contextlib.suppress(pygame.error, FileNotFoundError):
-            self.sprite_image = pygame.image.load("assets/sprites/player.png").convert_alpha()
-            # Scale to appropriate size (roughly 2x the radius for visible area)
-            sprite_size = self.radius * 2
-            self.sprite_image = pygame.transform.scale(
-                self.sprite_image, (int(sprite_size), int(sprite_size))
-            )
+        sprite_size = self.radius * 2
+        self.sprite_image = load_sprite(self.config.sprite_path, sprite_size)
 
         # Rotation state
         self.angle = 0.0  # Start facing RIGHT (sprite default orientation)

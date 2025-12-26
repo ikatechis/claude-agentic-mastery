@@ -30,6 +30,7 @@ class PlayerConfig:
     damage_cooldown: float = 1.0  # Seconds between damage ticks
     attack_range: int = 50  # Pixels
     attack_cooldown: float = 0.5  # Seconds between attacks
+    sprite_path: str = "assets/sprites/player.png"
 
 
 @dataclass
@@ -40,6 +41,7 @@ class ZombieConfig:
     color: tuple = (200, 50, 50)  # Red
     speed: int = 80  # Pixels per second
     damage: int = 10  # Damage per hit
+    sprite_path: str = "assets/sprites/zombie.png"
 
 
 @dataclass
@@ -85,6 +87,30 @@ class UIConfig:
     # Wave notifications
     wave_notification_duration: float = 2.0  # Seconds to show "Wave X" message
     wave_font_size: int = 72  # Larger font for wave notifications
+
+    # Visual effects
+    kill_flash_duration: float = 0.2  # Seconds to show kill flash effect
+    damage_popup_duration: float = 1.0  # Seconds to show damage popup
+
+
+@dataclass
+class KillFlash:
+    """Visual effect for zombie kills"""
+
+    x: float
+    y: float
+    radius: int
+    timer: float
+
+
+@dataclass
+class DamagePopup:
+    """Visual effect for damage numbers"""
+
+    x: float
+    y: float
+    text: str
+    timer: float
 
 
 # Global config instances

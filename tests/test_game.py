@@ -3,6 +3,7 @@
 import pygame
 import pytest
 
+from config import DamagePopup, KillFlash
 from game import Game
 from game_state import GameState
 
@@ -125,8 +126,8 @@ class TestVisualEffects:
     def test_render_kill_flashes_normal(self, game):
         """Test rendering with normal timer values."""
         game.kill_flashes = [
-            {"x": 100, "y": 100, "radius": 15, "timer": 0.15},
-            {"x": 200, "y": 200, "radius": 15, "timer": 0.075},
+            KillFlash(x=100, y=100, radius=15, timer=0.15),
+            KillFlash(x=200, y=200, radius=15, timer=0.075),
         ]
         # Should not raise any errors
         game.render_kill_flashes()
@@ -134,9 +135,9 @@ class TestVisualEffects:
     def test_render_kill_flashes_timer_exceeds_max(self, game):
         """Test rendering when timer exceeds expected max (edge case bug)."""
         game.kill_flashes = [
-            {"x": 100, "y": 100, "radius": 15, "timer": 0.16},  # Slightly over 0.15
-            {"x": 200, "y": 200, "radius": 15, "timer": 0.20},  # Well over 0.15
-            {"x": 300, "y": 300, "radius": 15, "timer": 1.0},  # Way over
+            KillFlash(x=100, y=100, radius=15, timer=0.16),  # Slightly over 0.15
+            KillFlash(x=200, y=200, radius=15, timer=0.20),  # Well over 0.15
+            KillFlash(x=300, y=300, radius=15, timer=1.0),  # Way over
         ]
         # Should not raise ValueError about invalid color
         game.render_kill_flashes()
@@ -144,15 +145,15 @@ class TestVisualEffects:
     def test_render_kill_flashes_negative_timer(self, game):
         """Test rendering with negative timer (should be handled gracefully)."""
         game.kill_flashes = [
-            {"x": 100, "y": 100, "radius": 15, "timer": -0.01},
-            {"x": 200, "y": 200, "radius": 15, "timer": -0.10},
+            KillFlash(x=100, y=100, radius=15, timer=-0.01),
+            KillFlash(x=200, y=200, radius=15, timer=-0.10),
         ]
         # Should not raise ValueError about invalid color
         game.render_kill_flashes()
 
     def test_render_kill_flashes_zero_timer(self, game):
         """Test rendering with zero timer."""
-        game.kill_flashes = [{"x": 100, "y": 100, "radius": 15, "timer": 0.0}]
+        game.kill_flashes = [KillFlash(x=100, y=100, radius=15, timer=0.0)]
         # Should not raise any errors
         game.render_kill_flashes()
 
@@ -165,8 +166,8 @@ class TestVisualEffects:
     def test_render_damage_popups_normal(self, game):
         """Test rendering with normal popup values."""
         game.damage_popups = [
-            {"x": 100, "y": 100, "text": "-10", "timer": 1.0},
-            {"x": 200, "y": 200, "text": "-5", "timer": 0.5},
+            DamagePopup(x=100, y=100, text="-10", timer=1.0),
+            DamagePopup(x=200, y=200, text="-5", timer=0.5),
         ]
         # Should not raise any errors
         game.render_damage_popups()

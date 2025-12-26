@@ -4,12 +4,13 @@ Handles the game loop, rendering, and event processing
 """
 
 import contextlib
+import dataclasses
 import math
 import random
 
 import pygame
 
-from config import game_config, score_config, ui_config, wave_config
+from config import DamagePopup, KillFlash, game_config, score_config, ui_config, wave_config
 from entities.player import Player
 from entities.zombie import Zombie
 from game_state import GameState
@@ -67,8 +68,8 @@ class Game:
         self.zombies = []
 
         # Visual effects
-        self.damage_popups = []  # List of {"x", "y", "text", "timer"}
-        self.kill_flashes = []  # List of {"x", "y", "radius", "timer"}
+        self.damage_popups = []  # List of DamagePopup dataclasses
+        self.kill_flashes = []  # List of KillFlash dataclasses
 
         # Background tile loading (fallback to solid color if fails)
         self.background_tile = None
@@ -226,16 +227,21 @@ class Game:
                     # Add visual effects
                     # Flash effect at zombie position
                     self.kill_flashes.append(
-                        {"x": zombie.x, "y": zombie.y, "radius": zombie.radius, "timer": 0.15}
+                        KillFlash(
+                            x=zombie.x,
+                            y=zombie.y,
+                            radius=zombie.radius,
+                            timer=self.ui_config.kill_flash_duration,
+                        )
                     )
                     # Damage popup above zombie
                     self.damage_popups.append(
-                        {
-                            "x": zombie.x,
-                            "y": zombie.y - 20,
-                            "text": f"+{self.score_config.points_per_kill}",
-                            "timer": 0.5,
-                        }
+                        DamagePopup(
+                            x=zombie.x,
+                            y=zombie.y - 20,
+                            text=f"+{self.score_config.points_per_kill}",
+                            timer=self.ui_config.damage_popup_duration,
+                        )
                     )
                 else:
                     survivors.append(zombie)
@@ -272,16 +278,16 @@ class Game:
         # Update visual effects
         # Update kill flashes
         self.kill_flashes = [
-            {**flash, "timer": flash["timer"] - delta_time}
+            dataclasses.replace(flash, timer=flash.timer - delta_time)
             for flash in self.kill_flashes
-            if flash["timer"] > 0
+            if flash.timer > 0
         ]
 
         # Update damage popups (move up and fade)
         self.damage_popups = [
-            {**popup, "timer": popup["timer"] - delta_time, "y": popup["y"] - 30 * delta_time}
+            dataclasses.replace(popup, timer=popup.timer - delta_time, y=popup.y - 30 * delta_time)
             for popup in self.damage_popups
-            if popup["timer"] > 0
+            if popup.timer > 0
         ]
 
     def render_background(self):
@@ -422,7 +428,7 @@ class Game:
         """Render white flash effects where zombies were killed."""
         for flash in self.kill_flashes:
             # Flash intensity based on remaining timer
-            alpha = int(255 * (flash["timer"] / 0.15))  # 0.15s is initial timer
+            alpha = int(255 * (flash.timer / self.ui_config.kill_flash_duration))
             # Clamp alpha to valid range [0, 255]
             alpha = max(0, min(255, alpha))
             # Draw white circle with fading alpha
@@ -430,8 +436,8 @@ class Game:
             pygame.draw.circle(
                 flash_surface,
                 (255, 255, 255, alpha),
-                (int(flash["x"]), int(flash["y"])),
-                int(flash["radius"]),
+                (int(flash.x), int(flash.y)),
+                int(flash.radius),
             )
             self.screen.blit(flash_surface, (0, 0))
 
@@ -439,12 +445,12 @@ class Game:
         """Render floating damage numbers."""
         for popup in self.damage_popups:
             # Fade out based on remaining timer
-            alpha_ratio = popup["timer"] / 0.5  # 0.5s is initial timer
+            alpha_ratio = popup.timer / self.ui_config.damage_popup_duration
             color = (255, 255, 0)  # Yellow
 
             # Render text with fade
-            text = self.font.render(popup["text"], True, color)
-            text_rect = text.get_rect(center=(int(popup["x"]), int(popup["y"])))
+            text = self.font.render(popup.text, True, color)
+            text_rect = text.get_rect(center=(int(popup.x), int(popup.y)))
 
             # Apply alpha to surface
             text.set_alpha(int(255 * alpha_ratio))

@@ -94,12 +94,53 @@ class UIConfig:
 
 
 @dataclass
+class PowerupConfig:
+    """Power-up system settings"""
+
+    # Spawning
+    drop_chance: float = 0.2  # 20% on zombie death
+
+    # Lifetime
+    lifetime: float = 10.0  # Seconds before despawn
+    warning_duration: float = 2.0  # Blink warning duration
+    blink_frequency: float = 0.2  # Blink cycle time (0.1s on, 0.1s off)
+
+    # Visual
+    radius: int = 10
+    health_color: tuple = (0, 255, 0)  # Green
+    speed_color: tuple = (0, 255, 255)  # Cyan
+    shield_color: tuple = (255, 215, 0)  # Gold
+
+    # Effects
+    health_restore_min: int = 30
+    health_restore_max: int = 50
+    speed_multiplier: float = 1.5
+    speed_duration_min: float = 5.0
+    speed_duration_max: float = 10.0
+    shield_hits: int = 3
+
+    # Visual effects
+    pickup_flash_duration: float = 0.15
+
+
+@dataclass
 class KillFlash:
     """Visual effect for zombie kills"""
 
     x: float
     y: float
     radius: int
+    timer: float
+
+
+@dataclass
+class PickupFlash:
+    """Visual effect for power-up pickups"""
+
+    x: float
+    y: float
+    radius: int
+    color: tuple  # Matches power-up type color
     timer: float
 
 
@@ -120,3 +161,4 @@ zombie_config = ZombieConfig()
 wave_config = WaveConfig()
 score_config = ScoreConfig()
 ui_config = UIConfig()
+powerup_config = PowerupConfig()

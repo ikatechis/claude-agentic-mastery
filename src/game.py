@@ -10,8 +10,18 @@ import random
 
 import pygame
 
-from config import DamagePopup, KillFlash, game_config, score_config, ui_config, wave_config
+from config import (
+    DamagePopup,
+    KillFlash,
+    PickupFlash,
+    game_config,
+    powerup_config,
+    score_config,
+    ui_config,
+    wave_config,
+)
 from entities.player import Player
+from entities.powerup import Powerup
 from entities.zombie import Zombie
 from game_state import GameState
 
@@ -59,6 +69,9 @@ class Game:
         self.score_config = score_config
         self.score = 0
 
+        # Power-up configuration
+        self.powerup_config = powerup_config
+
         # Create player at center of screen
         self.player = Player(
             self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 2, self.SCREEN_WIDTH, self.SCREEN_HEIGHT
@@ -67,9 +80,13 @@ class Game:
         # Zombie management
         self.zombies = []
 
+        # Power-up management
+        self.powerups = []
+
         # Visual effects
         self.damage_popups = []  # List of DamagePopup dataclasses
         self.kill_flashes = []  # List of KillFlash dataclasses
+        self.pickup_flashes = []  # List of PickupFlash dataclasses
 
         # Background tile loading (fallback to solid color if fails)
         self.background_tile = None
@@ -243,6 +260,10 @@ class Game:
                             timer=self.ui_config.damage_popup_duration,
                         )
                     )
+
+                    # Spawn power-up with drop_chance probability
+                    if random.random() < self.powerup_config.drop_chance:
+                        self.powerups.append(Powerup(zombie.x, zombie.y))
                 else:
                     survivors.append(zombie)
             self.zombies = survivors
@@ -290,6 +311,39 @@ class Game:
             if popup.timer > 0
         ]
 
+        # Update pickup flashes
+        self.pickup_flashes = [
+            dataclasses.replace(flash, timer=flash.timer - delta_time)
+            for flash in self.pickup_flashes
+            if flash.timer > 0
+        ]
+
+        # Update all powerups (remove expired ones)
+        self.powerups = [powerup for powerup in self.powerups if powerup.update(delta_time)]
+
+        # Check powerup collection
+        collected = []
+        for powerup in self.powerups:
+            if self.check_collision(self.player, powerup):
+                # Apply power-up effect
+                effect_data = powerup.apply_effect(self.player)
+
+                # Create pickup flash visual effect
+                self.pickup_flashes.append(
+                    PickupFlash(
+                        x=powerup.x,
+                        y=powerup.y,
+                        radius=powerup.radius * 2,  # Larger flash
+                        color=effect_data["color"],
+                        timer=self.powerup_config.pickup_flash_duration,
+                    )
+                )
+
+                collected.append(powerup)
+
+        # Remove collected powerups
+        self.powerups = [p for p in self.powerups if p not in collected]
+
     def render_background(self):
         """Draw the background - either tiled or solid color"""
         if self.background_tile:
@@ -312,8 +366,15 @@ class Game:
         for zombie in self.zombies:
             zombie.draw(self.screen)
 
+        # Render all powerups
+        for powerup in self.powerups:
+            powerup.draw(self.screen)
+
         # Render kill flash effects (on top of zombies)
         self.render_kill_flashes()
+
+        # Render pickup flash effects
+        self.render_pickup_flashes()
 
         # Render attack range (under player)
         self.render_attack_range()
@@ -323,6 +384,9 @@ class Game:
 
         # Render attack cooldown (above player)
         self.render_attack_cooldown()
+
+        # Render active power-up effects (shield, speed boost indicators)
+        self.render_player_effects()
 
         # Render damage popups (floating text)
         self.render_damage_popups()
@@ -441,6 +505,25 @@ class Game:
             )
             self.screen.blit(flash_surface, (0, 0))
 
+    def render_pickup_flashes(self):
+        """Render colored flash effects where powerups were collected."""
+        for flash in self.pickup_flashes:
+            # Flash intensity based on remaining timer
+            alpha = int(255 * (flash.timer / self.powerup_config.pickup_flash_duration))
+            # Clamp alpha to valid range [0, 255]
+            alpha = max(0, min(255, alpha))
+            # Draw colored circle with fading alpha
+            flash_surface = pygame.Surface((self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.SRCALPHA)
+            # flash.color is RGB, add alpha channel
+            color_with_alpha = (*flash.color, alpha)
+            pygame.draw.circle(
+                flash_surface,
+                color_with_alpha,
+                (int(flash.x), int(flash.y)),
+                int(flash.radius),
+            )
+            self.screen.blit(flash_surface, (0, 0))
+
     def render_damage_popups(self):
         """Render floating damage numbers."""
         for popup in self.damage_popups:
@@ -455,6 +538,66 @@ class Game:
             # Apply alpha to surface
             text.set_alpha(int(255 * alpha_ratio))
             self.screen.blit(text, text_rect)
+
+    def render_player_effects(self):
+        """Render visual indicators for active power-up effects."""
+        # Shield indicator
+        if self.player.has_shield():
+            # Draw gold circle around player
+            effect_surface = pygame.Surface(
+                (self.SCREEN_WIDTH, self.SCREEN_HEIGHT), pygame.SRCALPHA
+            )
+            pygame.draw.circle(
+                effect_surface,
+                (255, 215, 0, 128),  # Gold with 50% opacity
+                (int(self.player.x), int(self.player.y)),
+                self.player.radius + 5,  # Slightly larger than player
+                3,  # Border width
+            )
+            self.screen.blit(effect_surface, (0, 0))
+
+            # Show remaining shield hits below player
+            shield_text = self.font.render(
+                f"Shield: {self.player.shield_hits_remaining}",
+                True,
+                (255, 215, 0),  # Gold
+            )
+            text_rect = shield_text.get_rect(
+                center=(int(self.player.x), int(self.player.y + self.player.radius + 20))
+            )
+            self.screen.blit(shield_text, text_rect)
+
+        # Speed boost indicator
+        if self.player.has_speed_boost():
+            # Progress bar showing remaining time
+            bar_width = 60
+            bar_height = 6
+            bar_x = int(self.player.x - bar_width / 2)
+            bar_y = int(self.player.y - self.player.radius - 15)
+
+            # Calculate progress (initial duration is stored in config)
+            # We need to estimate initial duration from config
+            max_duration = self.powerup_config.speed_duration_max
+            progress = self.player.speed_boost_timer / max_duration
+
+            # Background (dark)
+            pygame.draw.rect(self.screen, (50, 50, 50), (bar_x, bar_y, bar_width, bar_height))
+
+            # Foreground (cyan, shows remaining time)
+            filled_width = int(bar_width * progress)
+            pygame.draw.rect(
+                self.screen,
+                (0, 255, 255),  # Cyan
+                (bar_x, bar_y, filled_width, bar_height),
+            )
+
+            # Border
+            pygame.draw.rect(
+                self.screen,
+                (255, 255, 255),  # White border
+                (bar_x, bar_y, bar_width, bar_height),
+                1,  # Border width
+            )
 
     def handle_menu_events(self):
         """Handle events in MENU state."""

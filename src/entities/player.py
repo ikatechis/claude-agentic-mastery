@@ -51,6 +51,11 @@ class Player(pygame.sprite.Sprite):
         self.attack_cooldown_time = self.config.attack_cooldown
         self.is_attacking = False  # True during attack frame
 
+        # Power-up effects
+        self.speed_multiplier = 1.0  # Speed boost multiplier (1.0 = normal)
+        self.speed_boost_timer = 0.0  # Seconds remaining for speed boost
+        self.shield_hits_remaining = 0  # Number of hits shield can block
+
         # Sprite loading (fallback to circle if sprite fails)
         sprite_size = self.radius * 2
         self.sprite_image = load_sprite(self.config.sprite_path, sprite_size)
@@ -74,6 +79,12 @@ class Player(pygame.sprite.Sprite):
         # Update attack cooldown
         if self.attack_cooldown > 0:
             self.attack_cooldown -= delta_time
+
+        # Update speed boost timer
+        if self.speed_boost_timer > 0:
+            self.speed_boost_timer -= delta_time
+            if self.speed_boost_timer <= 0:
+                self.speed_multiplier = 1.0  # Reset to normal speed
 
         # Reset attack state
         self.is_attacking = False
@@ -104,8 +115,9 @@ class Player(pygame.sprite.Sprite):
             dy *= 0.7071
 
         # Apply movement (frame-independent using delta_time)
-        self.x += dx * self.speed * delta_time
-        self.y += dy * self.speed * delta_time
+        # Speed multiplier allows power-ups to temporarily boost speed
+        self.x += dx * self.speed * self.speed_multiplier * delta_time
+        self.y += dy * self.speed * self.speed_multiplier * delta_time
 
         # Keep player within screen boundaries
         self.x = max(self.radius, min(self.x, self.screen_width - self.radius))
@@ -140,19 +152,27 @@ class Player(pygame.sprite.Sprite):
         # When idle (dx==0, dy==0), keep last angle
 
     def take_damage(self, amount):
-        """Apply damage to the player.
+        """Apply damage to the player (shield blocks if active).
 
         Args:
             amount: Damage amount to apply
 
         Returns:
-            bool: True if damage was applied, False if on cooldown
+            bool: True if hit occurred (damage or shield block), False if on cooldown
         """
         if self.damage_cooldown <= 0:
-            self.health -= amount
-            self.health = max(0.0, self.health)  # Don't go below 0
-            self.damage_cooldown = self.damage_cooldown_time
-            return True
+            # Check if shield is active
+            if self.shield_hits_remaining > 0:
+                # Shield blocks the damage
+                self.shield_hits_remaining -= 1
+                self.damage_cooldown = self.damage_cooldown_time
+                return True  # Hit was blocked by shield
+            else:
+                # No shield, apply damage
+                self.health -= amount
+                self.health = max(0.0, self.health)  # Don't go below 0
+                self.damage_cooldown = self.damage_cooldown_time
+                return True
         return False
 
     def is_alive(self):
@@ -171,6 +191,40 @@ class Player(pygame.sprite.Sprite):
         """
         self.is_attacking = True
         self.attack_cooldown = self.attack_cooldown_time
+
+    def apply_speed_boost(self, multiplier: float, duration: float) -> None:
+        """Apply a speed boost effect.
+
+        Args:
+            multiplier: Speed multiplier (e.g., 1.5 for 50% faster)
+            duration: How long the boost lasts in seconds
+        """
+        self.speed_multiplier = multiplier
+        self.speed_boost_timer = duration
+
+    def apply_shield(self, hits: int) -> None:
+        """Apply a shield that blocks incoming damage.
+
+        Args:
+            hits: Number of hits the shield can block
+        """
+        self.shield_hits_remaining += hits
+
+    def has_shield(self) -> bool:
+        """Check if player currently has an active shield.
+
+        Returns:
+            True if shield has remaining hits
+        """
+        return self.shield_hits_remaining > 0
+
+    def has_speed_boost(self) -> bool:
+        """Check if player currently has an active speed boost.
+
+        Returns:
+            True if speed boost timer is active
+        """
+        return self.speed_boost_timer > 0
 
     def render(self, screen):
         """Draw the player with rotation

@@ -463,12 +463,226 @@
 
 ---
 
+## Session 3: Sprite Integration & Code Quality ✅ COMPLETE
+
+**Date:** December 26, 2024
+**Duration:** ~3 hours
+**Git Commits:** 8f220ac → 027ac4d (5 commits)
+**PR:** #7 (feat/sprite-integration-and-testing-improvements)
+
+### What We Built
+
+#### Sprite System (assets/, src/utils.py) ✅
+- ✅ **Professional Asset Integration**
+  - Integrated Kenney asset pack (free, professional-quality sprites)
+  - Player, zombie, and background tile sprites
+  - Graceful fallback to colored circles if sprites fail to load
+- ✅ **AI-Generated Alternatives** (assets/sprites/ai_generated/)
+  - Used Pollinations MCP server for sprite generation
+  - Robot player, AI zombie, grass tile variations
+  - Experimented with AI asset workflows
+- ✅ **Utility Function Extraction**
+  - Created `src/utils.py` with `load_sprite(path, size)` function
+  - DRY principle - eliminated duplicate sprite loading code
+  - Centralized error handling with `contextlib.suppress`
+  - Returns None on failure for graceful fallback
+
+#### Dynamic Entity Rotation (src/entities/*.py) ✅
+- ✅ **Smooth Sprite Rotation**
+  - Player sprites rotate to face movement direction
+  - Zombie sprites rotate to face the player while chasing
+  - Smooth rotation speeds: 720°/sec (player), 540°/sec (zombies)
+  - Idle behavior: sprites keep last facing direction
+- ✅ **Rotation Mathematics**
+  - `math.atan2(-dy, dx)` calculates angle from movement vector
+  - Shortest rotation path algorithm (handles 359° → 1° wrap)
+  - Linear interpolation for smooth animation
+  - Accounts for pygame's inverted Y-axis
+- ✅ **Quality Preservation**
+  - Stores original sprite, rotates from original each frame
+  - Prevents cumulative quality degradation
+  - `pygame.transform.rotate()` for rotation
+- ✅ **Wave Delay Movement Fix**
+  - Removed early return that blocked player movement
+  - Added guards to zombie-specific logic during wave delays
+  - Player can now move/attack during 3-second wave delays
+  - Wave notifications still display correctly
+
+#### Code Quality Refactoring ✅
+- ✅ **Configuration Improvements** (src/config.py)
+  - Added `sprite_path` to PlayerConfig and ZombieConfig
+  - Added timer constants to UIConfig (`kill_flash_duration`, `damage_popup_duration`)
+  - Replaced magic numbers (0.15s, 0.5s) with named constants
+  - Created KillFlash and DamagePopup dataclasses
+- ✅ **Type Safety with Dataclasses**
+  - `KillFlash(x, y, radius, timer)` - type-safe kill effect
+  - `DamagePopup(x, y, text, timer)` - type-safe damage numbers
+  - Replaced dict-based effects throughout game.py
+  - Used `dataclasses.replace()` for immutable updates
+  - Access fields with dot notation instead of dict keys
+- ✅ **DRY Principle Application**
+  - Extracted sprite loading to single utility function
+  - Removed code duplication in player.py and zombie.py
+  - Centralized configuration in config.py
+  - 3 lines vs 9 lines for sprite loading
+
+#### Testing & Skills ✅
+- ✅ **Test Refactoring**
+  - Migrated from feature-based to 1-1 file correspondence
+  - Created test_player.py, test_zombie.py, test_config.py, test_game.py
+  - Industry standard: tests mirror source structure
+  - Updated tests to use dataclasses instead of dicts
+- ✅ **Custom Testing Skill**
+  - Created `.claude/skills/python-testing/` skill
+  - SKILL.md documents team testing practices
+  - EXAMPLES.md provides test templates
+  - Templates for conftest.py fixtures
+  - Minimal mocking philosophy
+  - Parametrization best practices
+- ✅ **Coverage Improvements**
+  - 53% coverage (up from 43%)
+  - 33 tests passing (all green)
+  - config.py: 100%, utils.py: 100%, game_state.py: 100%
+
+#### MCP Integration ✅
+- ✅ **Pollinations MCP Server**
+  - Added to .mcp.json configuration
+  - AI image generation for sprites
+  - Text generation capabilities (for future NPC dialogue)
+  - Audio generation (for future sound effects)
+  - Successfully generated player robot and AI zombie sprites
+- ✅ **MCP Server Count: 3**
+  - GitHub (PRs, issues, code reviews)
+  - ref.tools (API documentation lookup)
+  - Pollinations (AI asset generation)
+
+### Concepts Learned
+
+#### Asset Management
+- **Professional asset integration patterns**
+  - Kenney assets as industry standard free resources
+  - Proper attribution in documentation
+  - Asset organization (sprites/, ai_generated/)
+- **Graceful fallback strategies**
+  - Try sprite load, fallback to primitive shapes
+  - Game remains playable without assets
+  - `contextlib.suppress` for clean error handling
+- **AI-generated asset workflows**
+  - Pollinations MCP for sprite generation
+  - Prompt engineering for pixel art style
+  - Comparison of AI vs professional assets
+
+#### Game Math & Physics
+- **Angle calculation with atan2**
+  - `math.atan2(y, x)` returns angle in radians
+  - Handles all quadrants correctly (unlike `atan`)
+  - Negating dy accounts for inverted Y-axis
+- **Smooth rotation interpolation**
+  - Linear interpolation: `angle += rotation_speed * delta_time`
+  - Clamp to target when close enough
+  - Different rotation speeds for different entities
+- **Shortest rotation path algorithm**
+  - Normalize angle difference to [-180, 180]
+  - Choose clockwise or counterclockwise
+  - Prevents 359° → 1° going the long way
+
+#### Code Organization
+- **Utility function extraction**
+  - Identify duplicated code patterns
+  - Extract to single source of truth
+  - Clear function signatures
+  - Comprehensive docstrings
+- **Dataclass-based type safety**
+  - Replace dicts with typed dataclasses
+  - IDE autocomplete and type checking
+  - Immutable updates with `dataclasses.replace()`
+  - Self-documenting code structure
+- **Configuration centralization**
+  - All magic numbers in config.py
+  - Easy game balance tuning
+  - Version control for game parameters
+  - Type-safe configuration access
+- **DRY principle in practice**
+  - Don't Repeat Yourself
+  - Single source of truth
+  - Easier maintenance and bug fixes
+  - Reduced code size
+
+### Verification Discipline
+
+**APIs Verified This Session:**
+- `pygame.transform.rotate(surface, angle)` - counterclockwise rotation
+- `math.atan2(y, x)` - angle calculation from vector
+- `math.degrees()` - radians to degrees conversion
+- `dataclasses.replace(instance, **changes)` - immutable updates
+- `contextlib.suppress(*exceptions)` - clean exception handling
+- Pollinations MCP image generation API
+
+**Best Practices Applied:**
+- Used config dataclasses instead of hardcoded values
+- Extracted utility functions (DRY principle)
+- Type-safe dataclasses instead of dicts
+- Comprehensive docstrings for new functions
+- Test coverage for all new code
+
+### Key Lessons
+
+1. **Asset integration requires fallbacks**
+   - Never assume assets will load successfully
+   - Graceful degradation improves robustness
+   - Game should be playable with or without sprites
+
+2. **Math is critical for game feel**
+   - Smooth rotation > instant snapping
+   - Shortest path algorithm prevents weird behavior
+   - Different rotation speeds add character variety
+
+3. **Type safety prevents bugs**
+   - Dataclasses catch errors at dev time
+   - IDE autocomplete reduces typos
+   - Dict keys are error-prone (no type checking)
+
+4. **DRY principle reduces maintenance**
+   - 9 lines → 3 lines (sprite loading)
+   - One place to fix bugs
+   - Consistent behavior everywhere
+
+5. **Skills scale team knowledge**
+   - python-testing skill documents team practices
+   - New team members learn patterns
+   - Reduces code review burden
+
+### Statistics
+
+- **Files Created:** 4 (utils.py, game_state.py, assets/, python-testing skill)
+- **Files Modified:** 8 (player.py, zombie.py, game.py, config.py, test files)
+- **Lines Added:** ~250 (code + tests + documentation)
+- **Assets Integrated:** 6 sprite files (3 Kenney, 3 AI-generated)
+- **Tests:** 33 passing, 53% coverage (up from 43%)
+- **MCP Servers:** 3 configured (GitHub, ref.tools, Pollinations)
+- **Git Commits:** 5 (sprite integration, rotation, MCP, refactoring)
+- **All quality checks:** ✅ PASSING (ruff, mypy, pytest, pre-commit)
+
+### Session 3 Final Status
+
+**Completion:** 100% ✅
+**All Features Working:**
+1. ✅ Sprite integration with graceful fallbacks
+2. ✅ Dynamic rotation system for entities
+3. ✅ Wave delay movement fix
+4. ✅ Code quality improvements (utils, dataclasses)
+5. ✅ Enhanced test suite (53% coverage)
+6. ✅ Custom testing skill created
+7. ✅ Pollinations MCP integration
+
+---
+
 ## Overall Progress
 
-**Current Phase:** 2 - Process & Documentation
-**Current Session:** 2.5 / 15 (100% complete)
-**Sessions Completed:** 2.5 / 15 = 17%
-**Game Completion:** ~20% (core mechanics working, needs features + polish)
+**Current Phase:** 3 - Skills & Subagents
+**Current Session:** 3 / 15 (100% complete)
+**Sessions Completed:** 3 / 15 = 20%
+**Game Completion:** ~35% (core mechanics + visual polish, needs more features)
 
 ### Zombie Survival Features
 
@@ -479,12 +693,16 @@
 - [x] Melee combat (SPACE to attack) ✅
 - [x] Multiple zombie spawning ✅
 - [x] Modern dev tooling (tests, CI/CD) ✅
-- [ ] Wave-based spawning with difficulty
-- [ ] Score/kill counter
-- [ ] Game states (menu, game over)
-- [ ] Weapons and upgrades
+- [x] Wave-based spawning with difficulty ✅
+- [x] Score/kill counter ✅
+- [x] Game states (menu, game over) ✅
+- [x] Sprite integration with rotation ✅
+- [x] AI asset generation setup ✅
+- [ ] Power-ups and collectibles
+- [ ] Different zombie types
+- [ ] Sound and music
+- [ ] Particle effects
 - [ ] Boss zombies
-- [ ] Sound and effects
 - [ ] Polish and menus
 
 ### Agentic Skills Mastered
@@ -498,31 +716,32 @@
 - [x] Pre-commit hooks ✅
 - [x] GitHub Actions CI/CD ✅
 - [x] Test-driven development basics ✅
-- [x] MCP integration (ref.tools, GitHub) ✅
-- [ ] Skills creation
-- [ ] Subagents creation
-- [ ] Context management
-- [ ] Advanced MCP configuration
+- [x] MCP integration (ref.tools, GitHub, Pollinations) ✅
+- [x] Skills creation (python-testing) ✅
+- [x] Plan mode & agent workflows ✅
+- [ ] Advanced subagent composition
+- [ ] Complex MCP server creation
+- [ ] Context management optimization
 
 ---
 
 ## Next Steps
 
-**Current:** Ready for Session 3!
-**Phase 2 Goals:** Process & Documentation (Sessions 3-4)
+**Current:** Ready for Session 4!
+**Phase 3 Goals:** Skills & Subagents (Sessions 4-6)
 
-### Session 3 Planned Tasks:
-1. **Wave-based zombie spawning** - Progressive difficulty
-2. **Score/kill counter** - Track player performance
-3. **Game states** - Menu, Playing, Game Over screens
-4. **Restart functionality** - Game over with restart option
-5. **Increase test coverage** - Beyond 43%
+### Session 4 Planned Tasks:
+1. **Power-ups system** - Health packs, speed boosts, temporary shields
+2. **Zombie variants** - Fast zombies, tank zombies, explosive zombies
+3. **Sound effects** - Attack sounds, zombie groans, ambient music
+4. **Particle effects** - Blood splatter, kill effects, power-up sparkles
+5. **Increase test coverage** - Beyond 53%
 
-### Agentic Concepts to Learn (Session 3-4):
-- Context management techniques
-- Advanced verification protocols
-- Documentation patterns
-- (Skills & Subagents - Phase 3, Sessions 5-6)
+### Agentic Concepts to Learn (Session 4-6):
+- Advanced subagent composition
+- Complex MCP server workflows
+- Skill composition and chaining
+- Context management optimization
 
 ---
 

@@ -185,23 +185,22 @@ class Game:
         Args:
             delta_time: Time elapsed since last frame in seconds
         """
-        # Handle wave delay (between waves)
+        # Handle wave delay countdown (don't block other updates)
         if self.wave_delay_timer > 0:
             self.wave_delay_timer -= delta_time
             if self.wave_delay_timer <= 0:
                 self.start_wave()
-            return  # Don't update gameplay during delay
 
-        # Spawn zombies gradually
-        if self.zombies_to_spawn > 0:
+        # Spawn zombies gradually (only if not in wave delay)
+        if self.wave_delay_timer <= 0 and self.zombies_to_spawn > 0:
             self.spawn_timer -= delta_time
             if self.spawn_timer <= 0:
                 self.spawn_zombie()
                 self.zombies_to_spawn -= 1
                 self.spawn_timer = self.wave_config.spawn_interval
 
-        # Check if wave complete
-        if len(self.zombies) == 0 and self.zombies_to_spawn == 0:
+        # Check if wave complete (only if not already in delay)
+        if self.wave_delay_timer <= 0 and len(self.zombies) == 0 and self.zombies_to_spawn == 0:
             self.wave_delay_timer = self.wave_config.wave_delay
 
         # Update wave notification timer

@@ -62,6 +62,12 @@ class Player(pygame.sprite.Sprite):
                 self.sprite_image, (int(sprite_size), int(sprite_size))
             )
 
+        # Rotation state
+        self.angle = 0.0  # Start facing RIGHT (sprite default orientation)
+        self.original_sprite = None
+        if self.sprite_image:
+            self.original_sprite = self.sprite_image.copy()
+
     def update(self, delta_time):
         """Update player state
 
@@ -112,6 +118,34 @@ class Player(pygame.sprite.Sprite):
         self.x = max(self.radius, min(self.x, self.screen_width - self.radius))
         self.y = max(self.radius, min(self.y, self.screen_height - self.radius))
 
+        # Calculate target rotation from movement
+        if dx != 0 or dy != 0:
+            # atan2(-dy, dx) accounts for inverted Y-axis in pygame
+            import math
+
+            target_angle = math.degrees(math.atan2(-dy, dx))
+            target_angle = target_angle % 360
+
+            # Smooth rotation (720°/sec = 2 full rotations per second)
+            rotation_speed = 720.0
+            angle_diff = target_angle - self.angle
+
+            # Shortest rotation path (handle 359° -> 1° wrap)
+            if angle_diff > 180:
+                angle_diff -= 360
+            elif angle_diff < -180:
+                angle_diff += 360
+
+            # Apply rotation
+            max_rotation = rotation_speed * delta_time
+            if abs(angle_diff) < max_rotation:
+                self.angle = target_angle
+            else:
+                self.angle += max_rotation if angle_diff > 0 else -max_rotation
+
+            self.angle = self.angle % 360
+        # When idle (dx==0, dy==0), keep last angle
+
     def take_damage(self, amount):
         """Apply damage to the player.
 
@@ -146,15 +180,20 @@ class Player(pygame.sprite.Sprite):
         self.attack_cooldown = self.attack_cooldown_time
 
     def render(self, screen):
-        """Draw the player
+        """Draw the player with rotation
 
         Args:
             screen: Pygame surface to draw on
         """
-        if self.sprite_image:
-            # Draw sprite centered on position
+        if self.original_sprite:
+            # Rotate from original (avoid degradation)
+            rotated_sprite = pygame.transform.rotate(self.original_sprite, self.angle)
+            rect = rotated_sprite.get_rect(center=(int(self.x), int(self.y)))
+            screen.blit(rotated_sprite, rect)
+        elif self.sprite_image:
+            # Fallback without rotation
             rect = self.sprite_image.get_rect(center=(int(self.x), int(self.y)))
             screen.blit(self.sprite_image, rect)
         else:
-            # Fallback to circle if sprite not loaded
+            # Circle fallback
             pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius)

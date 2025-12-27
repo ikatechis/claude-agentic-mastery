@@ -39,7 +39,7 @@ class ZombieConfig:
 
     radius: int = 12
     color: tuple = (200, 50, 50)  # Red
-    speed: int = 80  # Pixels per second
+    speed: int = 70  # Pixels per second
     damage: int = 10  # Damage per hit
     sprite_path: str = "assets/sprites/zombie.png"
 

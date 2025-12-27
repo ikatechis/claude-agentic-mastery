@@ -197,3 +197,84 @@ class TestVisualEffects:
         game.player.attack_cooldown_time = 0.5
         # Should not raise any errors
         game.render_attack_cooldown()
+
+
+class TestPowerupSystem:
+    """Test power-up spawning, collection, and effects integration."""
+
+    def test_powerup_list_initialized(self, game):
+        """Test power-up system is initialized in game"""
+        # Verify powerup list exists
+        assert hasattr(game, "powerups")
+        assert hasattr(game, "pickup_flashes")
+        assert hasattr(game, "powerup_config")
+
+        # Lists should start empty
+        assert len(game.powerups) == 0
+        assert len(game.pickup_flashes) == 0
+
+    def test_powerup_collection(self, game):
+        """Test player can collect powerups"""
+        from entities.powerup import Powerup, PowerupType
+
+        # Start game
+        game.start_new_game()
+
+        # Create health powerup at player position
+        initial_health = game.player.health = 50
+        powerup = Powerup(game.player.x, game.player.y, PowerupType.HEALTH)
+        game.powerups = [powerup]
+
+        # Update game (should trigger collection)
+        game.update(0.016)
+
+        # Powerup should be collected
+        assert len(game.powerups) == 0
+
+        # Health should have increased
+        assert game.player.health > initial_health
+
+    def test_powerup_expiration(self, game):
+        """Test powerups expire after lifetime"""
+        from entities.powerup import Powerup, PowerupType
+
+        # Create powerup far from player
+        powerup = Powerup(0, 0, PowerupType.HEALTH)
+        powerup.lifetime = 0.1  # Set to expire soon
+        game.powerups = [powerup]
+
+        # Update beyond lifetime
+        game.update(0.2)
+
+        # Powerup should be removed
+        assert len(game.powerups) == 0
+
+    def test_pickup_flash_creation(self, game):
+        """Test pickup flash is created when collecting powerup"""
+        from entities.powerup import Powerup, PowerupType
+
+        game.start_new_game()
+
+        # Create powerup at player position
+        powerup = Powerup(game.player.x, game.player.y, PowerupType.SPEED)
+        game.powerups = [powerup]
+
+        initial_flash_count = len(game.pickup_flashes)
+
+        # Update game (should collect powerup and create flash)
+        game.update(0.016)
+
+        # Flash should be created
+        assert len(game.pickup_flashes) > initial_flash_count
+
+    def test_player_effects_rendering(self, game):
+        """Test player effect indicators render without errors"""
+        game.start_new_game()
+
+        # Add shield to player
+        game.player.apply_shield(3)
+        game.render_player_effects()  # Should not raise errors
+
+        # Add speed boost
+        game.player.apply_speed_boost(1.5, 5.0)
+        game.render_player_effects()  # Should not raise errors

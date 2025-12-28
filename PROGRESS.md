@@ -681,8 +681,8 @@
 
 **Date:** December 27, 2024
 **Duration:** ~3 hours
-**Git Commits:** TBD (pending commit)
-**PR:** TBD
+**Git Commits:** cdff27c (power-up system), ae59821 (power-up sprites)
+**Branch:** feat/logging-system (not yet merged)
 
 ### What We Built
 
@@ -888,12 +888,166 @@
 
 ---
 
+## Session 4.5: Comprehensive Logging System ✅ COMPLETE
+
+**Date:** December 28, 2024
+**Duration:** ~1.5 hours
+**Git Commits:** c06766d (logging system), 2cdab5d (logging docs)
+**Branch:** feat/logging-system (current)
+
+### What We Built
+
+#### Logging Infrastructure (src/logger.py, src/main.py) ✅
+- ✅ **Dual-Handler Logging System**
+  - Console handler: WARNING+ (default) or DEBUG+ (GAME_DEBUG=1)
+  - File handler: DEBUG+ (always) for full playtest archiving
+  - Timestamped log files: `logs/game_YYYY-MM-DD_HHMMSS.log`
+  - Centralized `get_logger(__name__)` pattern across all modules
+- ✅ **Environment Variable Control**
+  - `GAME_DEBUG=1` environment flag enables verbose console output
+  - Normal mode: quiet console, full file logs
+  - Debug mode: verbose console + full file logs
+- ✅ **Log File Management**
+  - Automatic timestamping for playtest session archiving
+  - Logs directory excluded from git (in .gitignore)
+  - Each run creates new log file (no overwriting)
+
+#### Module Integration ✅
+- ✅ **Replaced Silent Error Suppression**
+  - Removed all `contextlib.suppress` usage
+  - Added try/except blocks with proper logging
+  - All errors now tracked and discoverable
+  - Graceful degradation with logged warnings
+- ✅ **Entity Event Logging**
+  - Player: damage events, attack actions, power-up collection
+  - Zombie: spawn events, death events
+  - Power-ups: spawn, collection, expiration
+  - Game: wave progression, state changes, high score updates
+
+#### Documentation ✅
+- ✅ **CLAUDE.md Logging Guidelines** (comprehensive 7-section guide)
+  - When to use each log level (DEBUG, INFO, WARNING, ERROR)
+  - Error handling patterns (replace silent suppression)
+  - Logging best practices and examples
+  - Testing logs during development
+  - Module logging pattern
+  - Log file archiving
+  - Checklist for new modules
+- ✅ **ARCHITECTURE.md Logging Section**
+  - Logging system architecture details
+  - Handler configuration documentation
+  - Module logging pattern
+  - Error handling with logging examples
+- ✅ **README.md Updated**
+  - Added "Development Features" section
+  - Documented debug mode flag
+  - Added logger.py to project structure
+  - Updated run commands with debug mode
+
+### Concepts Learned
+
+#### Professional Logging Practices
+- **Dual-handler pattern**
+  - Interactive debugging (console)
+  - Playtest archiving (file)
+  - Different log levels per handler
+  - Environment-based configuration
+- **Structured logging levels**
+  - DEBUG: Detailed state for debugging (verbose)
+  - INFO: Normal operations and milestones
+  - WARNING: Recoverable errors with fallbacks
+  - ERROR: Critical failures requiring attention
+- **Error visibility**
+  - Never suppress errors silently
+  - Always log exceptions with context
+  - Use `exc_info=True` for stack traces
+  - Playtest issues become discoverable
+
+#### Python Logging Module
+- **Logger hierarchy**
+  - Module-based logger naming (`__name__`)
+  - Hierarchical logger control (future capability)
+  - Clear source identification in logs
+- **Handler configuration**
+  - StreamHandler for console output
+  - FileHandler for persistent logs
+  - Custom formatters per handler
+  - Level filtering per handler
+- **Environment-based configuration**
+  - `os.environ.get("GAME_DEBUG")` for runtime control
+  - No code changes to toggle verbosity
+  - Production-friendly debugging
+
+### Verification Discipline
+
+**APIs Verified:**
+- Python `logging` module (handlers, formatters, levels)
+- `logging.getLogger(__name__)` for module-based loggers
+- `os.environ.get()` for environment variables
+- `datetime.now().strftime()` for timestamp formatting
+- `pathlib.Path` for log file management
+
+**Best Practices Applied:**
+- Consistent logging pattern across all modules
+- Descriptive log messages with context (coordinates, IDs, values)
+- Error handling with logged warnings instead of silent suppression
+- Comprehensive documentation for team practices
+
+### Key Lessons
+
+1. **Logging is essential for game development**
+   - Playtests generate valuable debugging data
+   - Timestamped logs enable post-session analysis
+   - Silent errors are impossible to debug
+   - File logs preserve full history
+
+2. **Debug mode improves development workflow**
+   - Quick toggle via environment variable
+   - No code changes needed
+   - Verbose when needed, quiet for playtests
+   - Console + file gives best of both worlds
+
+3. **Documentation scales team practices**
+   - Logging guidelines prevent inconsistency
+   - New modules follow established patterns
+   - Code review easier with documented standards
+   - Future contributors understand practices
+
+4. **Error visibility prevents bugs**
+   - Silent suppression hides problems
+   - Logged warnings surface issues early
+   - Stack traces aid debugging
+   - Playtest logs reveal edge cases
+
+### Statistics
+
+- **Files Created:** 1 (logger.py)
+- **Files Modified:** 10+ (all modules + docs)
+- **Lines Added:** ~150 (logging system + integration)
+- **Documentation:** 3 files updated (CLAUDE.md, ARCHITECTURE.md, README.md)
+- **Error Suppression Removed:** All `contextlib.suppress` replaced
+- **Logging Coverage:** 100% of modules now have logging
+- **All quality checks:** ✅ PASSING (ruff, mypy, pytest)
+
+### Session 4.5 Final Status
+
+**Completion:** 100% ✅
+**All Features Working:**
+1. ✅ Dual-handler logging (console + file)
+2. ✅ Debug mode environment flag
+3. ✅ Timestamped log files
+4. ✅ All modules integrated with logging
+5. ✅ Silent error suppression eliminated
+6. ✅ Comprehensive documentation
+
+---
+
 ## Overall Progress
 
 **Current Phase:** 3 - Skills & Subagents
-**Current Session:** 4 / 15 (100% complete)
-**Sessions Completed:** 4 / 15 = 27%
-**Game Completion:** ~45% (core mechanics + power-ups, needs more features)
+**Current Session:** 4.5 / 15 (100% complete)
+**Sessions Completed:** 4.5 / 15 = 30%
+**Game Completion:** ~45% (core mechanics + power-ups + logging, needs more features)
 
 ### Zombie Survival Features
 
@@ -910,6 +1064,7 @@
 - [x] Sprite integration with rotation ✅
 - [x] AI asset generation setup ✅
 - [x] Power-ups and collectibles ✅
+- [x] Logging system with debug mode ✅
 - [ ] Power-up sprites (visual distinction)
 - [ ] Different zombie types
 - [ ] Sound and music
@@ -939,15 +1094,15 @@
 
 ## Next Steps
 
-**Current:** Ready for Session 4!
+**Current:** Ready for Session 5!
 **Phase 3 Goals:** Skills & Subagents (Sessions 4-6)
 
-### Session 4 Planned Tasks:
-1. **Power-ups system** - Health packs, speed boosts, temporary shields
-2. **Zombie variants** - Fast zombies, tank zombies, explosive zombies
-3. **Sound effects** - Attack sounds, zombie groans, ambient music
-4. **Particle effects** - Blood splatter, kill effects, power-up sparkles
-5. **Increase test coverage** - Beyond 53%
+### Session 5 Planned Tasks:
+1. **Zombie variants** - Different types with unique behaviors (fast, tank, exploding)
+2. **Character animations** - Sprite-based animation system (idle, walking, attacking)
+3. **Enhanced power-up visuals** - Distinct sprites for each type
+4. **Sound effects** - Attack sounds, zombie groans, ambient music
+5. **Particle effects** - Blood splatter, kill effects, power-up sparkles
 
 ### Agentic Concepts to Learn (Session 4-6):
 - Advanced subagent composition
@@ -964,4 +1119,4 @@
 Every session must maintain verification-first discipline.
 Build with confidence by verifying before coding.
 
-**🎮 Session 1 complete! Ready for zombies! 🧟‍♂️**
+**🎮 Sessions 1-4.5 complete! Ready for zombie variants and animations! 🧟‍♂️**

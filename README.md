@@ -25,8 +25,8 @@ uv run python src/main.py
 
 ### Progression
 - **Wave-Based Spawning** - Progressive difficulty with increasing zombies
-- **Score System** - Kill counter with high score tracking
-- **Game States** - Menu, Playing, Game Over with restart
+- **Score System** - Kill counter with persistent high score (file-based)
+- **Game States** - Menu, Playing, Paused, Game Over with restart
 
 ### Power-Ups (Session 4)
 - **Health Pack** - Restores 30-50 HP (green)
@@ -41,13 +41,19 @@ uv run python src/main.py
 - **Background Tiling** - Textured ground plane
 - **Visual Effects** - Kill flashes, damage popups, pickup animations
 
+### Development Features
+- **Logging System** - Dual-output logging (console + file)
+  - Debug mode: `GAME_DEBUG=1` for verbose console output
+  - Timestamped log files: `logs/game_YYYY-MM-DD_HHMMSS.log`
+  - Playtest archiving and debugging
+
 ## Controls
 
 | Key | Action |
 |-----|--------|
 | **WASD** | Move player |
 | **SPACE** | Melee attack |
-| **ESC** | Quit game |
+| **ESC / P** | Pause game |
 
 ## About This Project
 
@@ -121,11 +127,12 @@ Remaining features: Zombie variants, sound/music, particle effects, boss zombies
 ```
 claude-agentic-mastery/
 ├── src/
-│   ├── main.py              # Entry point
+│   ├── main.py              # Entry point, logging initialization
+│   ├── logger.py            # Logging configuration (console + file)
 │   ├── game.py              # Game loop, event handling, rendering
 │   ├── config.py            # Dataclass configuration
 │   ├── utils.py             # Utility functions (sprite loading, etc.)
-│   ├── game_state.py        # GameState enum (MENU, PLAYING, GAME_OVER)
+│   ├── game_state.py        # GameState enum (MENU, PLAYING, PAUSED, GAME_OVER)
 │   └── entities/
 │       ├── player.py        # Player with movement, combat, effects
 │       ├── zombie.py        # Zombie AI with chase behavior
@@ -139,6 +146,7 @@ claude-agentic-mastery/
 ├── assets/
 │   ├── sprites/             # Kenney Topdown Shooter sprites
 │   └── kenney_packs/        # Asset pack files
+├── logs/                    # Timestamped game logs (excluded from git)
 ├── .github/
 │   └── workflows/ci.yml     # GitHub Actions CI/CD
 ├── .claude/
@@ -152,8 +160,11 @@ claude-agentic-mastery/
 ### Development Commands
 
 ```bash
-# Run game
+# Run game (normal mode - quiet console, full file logs)
 uv run python src/main.py
+
+# Run with debug mode (verbose console output)
+GAME_DEBUG=1 uv run python src/main.py
 
 # Run tests
 uv run pytest                # With coverage

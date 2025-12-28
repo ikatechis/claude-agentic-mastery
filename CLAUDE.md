@@ -456,10 +456,10 @@ Building through 15 sessions to learn:
 **Session 3 Complete:**
 - ✅ Wave-based spawning with exponential scaling
 - ✅ Score tracking and UI display
-- ✅ Game states (MENU, PLAYING, GAME_OVER)
+- ✅ Game states (MENU, PLAYING, PAUSED, GAME_OVER)
 - ✅ Menu and game over screens
 - ✅ Wave notifications
-- ✅ High score system (in-memory)
+- ✅ High score system (file-based)
 - ✅ Pause state (ESC/P key)
 
 **Session 4 Complete:**
@@ -470,7 +470,7 @@ Building through 15 sessions to learn:
 - ✅ Sprite loading system with fallbacks
 - ✅ Test coverage: 52 tests, 69% coverage
 
-**Logging System Complete:**
+**Session 4.5 Complete:**
 - ✅ Timestamped log files for playtest archiving
 - ✅ Debug mode flag (GAME_DEBUG=1)
 - ✅ Dual output: console (WARNING+) and file (DEBUG+)

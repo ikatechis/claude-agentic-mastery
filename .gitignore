@@ -34,6 +34,9 @@ assets/
 # Game logs
 logs/
 
+# Game save data (user-specific, should not be committed)
+highscore.txt
+
 # Coverage reports
 htmlcov/
 .coverage

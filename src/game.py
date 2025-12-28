@@ -68,6 +68,7 @@ class Game:
         # Score tracking
         self.score_config = score_config
         self.score = 0
+        self.high_score = 0
 
         # Power-up configuration
         self.powerup_config = powerup_config
@@ -94,14 +95,13 @@ class Game:
             self.background_tile = pygame.image.load("assets/sprites/tile_background.png").convert()
 
     def handle_events(self):
-        """Process game events"""
+        """Process game events during PLAYING state"""
         for event in pygame.event.get():
-            if (
-                event.type == pygame.QUIT
-                or event.type == pygame.KEYDOWN
-                and event.key == pygame.K_ESCAPE
-            ):
+            if event.type == pygame.QUIT:
                 self.running = False
+            elif event.type == pygame.KEYDOWN and event.key in (pygame.K_ESCAPE, pygame.K_p):
+                # Toggle pause
+                self.state = GameState.PAUSED
 
     @staticmethod
     def get_distance(entity1, entity2):
@@ -293,6 +293,9 @@ class Game:
 
             # Check if player died
             if not self.player.is_alive():
+                # Update high score
+                if self.score > self.high_score:
+                    self.high_score = self.score
                 self.state = GameState.GAME_OVER
                 return
 
@@ -623,6 +626,16 @@ class Game:
         title_rect = title_text.get_rect(center=(self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 3))
         self.screen.blit(title_text, title_rect)
 
+        # High Score display
+        if self.high_score > 0:
+            high_score_text = self.wave_font.render(
+                f"High Score: {self.high_score}", True, (255, 255, 0)
+            )
+            high_score_rect = high_score_text.get_rect(
+                center=(self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 3 + 60)
+            )
+            self.screen.blit(high_score_text, high_score_rect)
+
         # Instructions
         instructions = [
             "Press ENTER or SPACE to Start",
@@ -665,18 +678,34 @@ class Game:
         title_rect = title_text.get_rect(center=(self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 3))
         self.screen.blit(title_text, title_rect)
 
+        # Check if new high score
+        is_new_high_score = self.score == self.high_score and self.score > 0
+
+        # New high score banner
+        y_offset = self.SCREEN_HEIGHT // 2 - 40
+        if is_new_high_score:
+            new_high_text = self.wave_font.render("NEW HIGH SCORE!", True, (0, 255, 0))
+            new_high_rect = new_high_text.get_rect(center=(self.SCREEN_WIDTH // 2, y_offset))
+            self.screen.blit(new_high_text, new_high_rect)
+            y_offset += 50
+
         # Final score
         score_text = self.wave_font.render(f"Final Score: {self.score}", True, (255, 255, 0))
-        score_rect = score_text.get_rect(center=(self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 2))
+        score_rect = score_text.get_rect(center=(self.SCREEN_WIDTH // 2, y_offset))
         self.screen.blit(score_text, score_rect)
+
+        # High score display
+        high_score_text = self.font.render(
+            f"High Score: {self.high_score}", True, self.ui_config.text_color
+        )
+        high_score_rect = high_score_text.get_rect(center=(self.SCREEN_WIDTH // 2, y_offset + 50))
+        self.screen.blit(high_score_text, high_score_rect)
 
         # Wave reached
         wave_text = self.font.render(
             f"Wave Reached: {self.current_wave}", True, self.ui_config.text_color
         )
-        wave_rect = wave_text.get_rect(
-            center=(self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 2 + 60)
-        )
+        wave_rect = wave_text.get_rect(center=(self.SCREEN_WIDTH // 2, y_offset + 90))
         self.screen.blit(wave_text, wave_rect)
 
         # Instructions
@@ -696,6 +725,49 @@ class Game:
 
         pygame.display.flip()
 
+    def handle_pause_events(self):
+        """Handle events in PAUSED state."""
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key in (pygame.K_ESCAPE, pygame.K_p):
+                    # Resume game
+                    self.state = GameState.PLAYING
+                elif event.key == pygame.K_q:
+                    self.running = False
+
+    def render_paused(self):
+        """Render the pause overlay."""
+        # First render the game state underneath
+        self.render()
+
+        # Draw semi-transparent overlay
+        overlay = pygame.Surface((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
+        overlay.set_alpha(128)
+        overlay.fill((0, 0, 0))
+        self.screen.blit(overlay, (0, 0))
+
+        # PAUSED title
+        title_text = self.wave_font.render("PAUSED", True, (255, 255, 0))
+        title_rect = title_text.get_rect(center=(self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 3))
+        self.screen.blit(title_text, title_rect)
+
+        # Instructions
+        instructions = [
+            "Press ESC or P to Resume",
+            "Press Q to Quit",
+        ]
+
+        y_offset = self.SCREEN_HEIGHT // 2
+        for instruction in instructions:
+            text = self.font.render(instruction, True, (255, 255, 255))
+            text_rect = text.get_rect(center=(self.SCREEN_WIDTH // 2, y_offset))
+            self.screen.blit(text, text_rect)
+            y_offset += 40
+
+        pygame.display.flip()
+
     def run(self):
         """Main game loop with state machine"""
         while self.running:
@@ -710,6 +782,9 @@ class Game:
                 self.handle_events()
                 self.update(delta_time)
                 self.render()
+            elif self.state == GameState.PAUSED:
+                self.handle_pause_events()
+                self.render_paused()
             elif self.state == GameState.GAME_OVER:
                 self.handle_game_over_events()
                 self.render_game_over()

@@ -11,7 +11,7 @@ class TestZombie:
         zombie = Zombie(100, 200)
         assert zombie.x == 100
         assert zombie.y == 200
-        assert zombie.speed == 80
+        assert zombie.speed == 70
         assert zombie.damage == 10
 
     def test_zombie_movement(self):

@@ -30,22 +30,29 @@ DISPLAY=:0 uv run python src/main.py
 src/
 ├── main.py              # Entry point, starts the game
 ├── game.py              # Main game loop, event handling, rendering
+├── game_state.py        # Game state enum (MENU, PLAYING, PAUSED, GAME_OVER)
+├── config.py            # Centralized configuration (dataclasses)
+├── utils.py             # Utility functions (sprite loading)
 └── entities/
     ├── __init__.py
-    └── player.py        # Player character with WASD movement
+    ├── player.py        # Player with health, combat, power-up effects
+    ├── zombie.py        # Zombie AI with chase behavior
+    └── powerup.py       # Collectible power-ups (health, speed, shield)
 ```
 
 **Game Class (game.py):**
-- Manages pygame initialization
-- Runs main game loop (60 FPS)
-- Handles events (QUIT, ESC key)
-- Updates and renders all entities
+- State machine (MENU, PLAYING, PAUSED, GAME_OVER)
+- Wave-based zombie spawning with exponential scaling
+- Score tracking and high score system
+- Power-up management and visual effects
+- Health bar, wave notifications, damage popups
 
 **Player Class (player.py):**
-- Green circle sprite (radius 15)
-- WASD movement (200 px/sec)
-- Frame-independent movement using delta_time
-- Boundary checking (stays within screen)
+- Sprite-based rendering with rotation
+- WASD movement (200 px/sec base, affected by power-ups)
+- Health system (100 HP, damage cooldown)
+- Melee combat (SPACE key, attack range, cooldown)
+- Power-up effects (speed boost, shield)
 
 ## 🔒 MANDATORY VERIFICATION PROTOCOL
 
@@ -225,7 +232,39 @@ Building through 15 sessions to learn:
 - ✅ Test infrastructure (6 tests, 43% coverage)
 - ✅ Code quality automation
 
-**Next Session:** Wave-based spawning, score counter, game states
+**Session 3 Complete:**
+- ✅ Wave-based spawning with exponential scaling
+- ✅ Score tracking and UI display
+- ✅ Game states (MENU, PLAYING, GAME_OVER)
+- ✅ Menu and game over screens
+- ✅ Wave notifications
+- ✅ High score system (in-memory)
+- ✅ Pause state (ESC/P key)
+
+**Session 4 Complete:**
+- ✅ Power-up system (HEALTH, SPEED, SHIELD)
+- ✅ Power-up drop chance on zombie kill
+- ✅ Timed power-ups with visual indicators
+- ✅ Visual effects (kill flashes, damage popups, pickup flashes)
+- ✅ Sprite loading system with fallbacks
+- ✅ Test coverage: 52 tests, 69% coverage
+
+## Future Sessions Roadmap
+
+**Session 5: Zombie Variants & Character Animations**
+- Zombie variants - Multiple zombie types with different colors/stats
+  - Use Kenney Zombie 1 & Zombie 2 sprites (Topdown Shooter pack)
+  - Variant spawn probabilities
+- Character animations - Sprite-based animation system
+  - Idle, walking, attacking poses
+  - Frame-based animation with delta_time
+  - Use Kenney 6-pose sprite sets (stand, hold, gun, machine, reload, silencer)
+
+**Session 6+: Polish & Expansion**
+- Sound effects & music (Kenney Audio assets)
+- More enemy types (Survivors, Robots from Kenney)
+- Power-up improvements & new types
+- Level/environment tiles & obstacles
 
 ## Remember
 

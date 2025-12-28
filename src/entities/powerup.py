@@ -65,9 +65,9 @@ class Powerup:
 
     def _get_sprite_path(self) -> str:
         """Get the sprite path for this power-up type."""
-        # AI-generated sprites from Pollinations (32x32 pixel art)
+        # 64x64 sprites with transparent backgrounds
         if self.powerup_type == PowerupType.HEALTH:
-            return "assets/sprites/powerup_health.png"  # Green health potion/cross
+            return "assets/sprites/powerup_health.png"  # Green health potion
         elif self.powerup_type == PowerupType.SPEED:
             return "assets/sprites/powerup_speed.png"  # Cyan lightning bolt
         else:  # SHIELD

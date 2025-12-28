@@ -5,6 +5,9 @@ __pycache__/
 *.so
 .Python
 
+# Environment variables (API keys, secrets)
+.env
+
 # Virtual environments
 .venv/
 venv/

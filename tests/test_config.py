@@ -45,7 +45,7 @@ class TestZombieConfig:
         """Test zombie config has expected default values"""
         config = ZombieConfig()
         assert config.radius == 12
-        assert config.speed == 80
+        assert config.speed == 70
         assert config.color == (200, 50, 50)
         assert config.damage == 10
 

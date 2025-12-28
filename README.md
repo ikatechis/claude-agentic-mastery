@@ -168,6 +168,11 @@ uv run mypy src/             # Type check
 # Pre-commit hooks
 pre-commit install           # Set up hooks
 pre-commit run --all-files   # Run manually
+
+# Sprite preprocessing (recommended - auto-detection + BG removal + sizing)
+python scripts/sprite_preprocess.py --batch sprites/ processed/            # Batch with auto-detect
+python scripts/sprite_preprocess.py input.png output.png --category enemy  # Single with category
+python scripts/sprite_preprocess.py --batch sprites/ out/ --dry-run        # Preview changes
 ```
 
 ### Running Tests
@@ -202,6 +207,20 @@ Sprites from **Kenney Topdown Shooter** pack (CC0 license):
 
 Game Icons from **Kenney Game Icons** pack (CC0 license):
 - https://kenney.nl/assets/game-icons
+
+### Sprite Preprocessing Pipeline
+
+**Unified workflow:** `scripts/sprite_preprocess.py`
+- **Auto-detection:** Categorizes sprites by filename (player, enemy, powerup, tile, etc.)
+- **Intelligent sizing:** Applies appropriate dimensions per category (32px-128px)
+- **Background removal:** Uses withoutbg Focus v1.0.0 model
+  - Multi-stage AI: Depth Anything V2 + ISNet + Focus matting + refiner
+  - Superior edge quality vs cloud APIs (remove.bg)
+  - Free, unlimited, offline (~320MB model download)
+- **Batch processing:** Process entire directories with progress tracking
+- **Dry-run mode:** Preview before processing
+
+See `scripts/README.md` for detailed usage and examples
 
 ## License
 

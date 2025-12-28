@@ -105,7 +105,7 @@ class Game:
             self.background_tile = pygame.image.load("assets/sprites/tile_background.png").convert()
             logger.debug("Background tile loaded successfully")
         except (pygame.error, FileNotFoundError):
-            logger.info("Background tile not found, using solid color fallback")
+            logger.warning("Background tile not found, using solid color fallback")
 
     def load_high_score(self):
         """Load high score from file. Defaults to 0 if file doesn't exist or is invalid."""
@@ -116,10 +116,8 @@ class Game:
                 logger.info(f"High score loaded: {self.high_score}")
             else:
                 logger.info("No high score file found, starting fresh")
-                self.high_score = 0
         except (ValueError, OSError) as e:
             logger.warning(f"Failed to load high score: {e}, defaulting to 0")
-            self.high_score = 0
 
     def save_high_score(self):
         """Save high score to file."""

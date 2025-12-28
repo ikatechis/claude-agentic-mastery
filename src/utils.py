@@ -23,5 +23,5 @@ def load_sprite(path: str, size: int) -> pygame.Surface | None:
         logger.debug(f"Loaded sprite: {path}")
         return scaled
     except (pygame.error, FileNotFoundError):
-        logger.debug(f"Sprite not found: {path}, using fallback")
+        logger.warning(f"Sprite not found: {path}, using fallback")
         return None

@@ -33,7 +33,8 @@ def setup_logging() -> None:
     root_logger.setLevel(logging.DEBUG)  # Capture everything
 
     # Remove any existing handlers (avoid duplicates)
-    root_logger.handlers = []
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
 
     # Console handler - WARNING+ by default, DEBUG+ in debug mode
     console_handler = logging.StreamHandler(sys.stdout)

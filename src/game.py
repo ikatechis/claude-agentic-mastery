@@ -7,6 +7,7 @@ import contextlib
 import dataclasses
 import math
 import random
+from pathlib import Path
 
 import pygame
 
@@ -28,6 +29,9 @@ from game_state import GameState
 
 class Game:
     """Main game class"""
+
+    # High score persistence
+    HIGHSCORE_FILE = Path("highscore.txt")
 
     def __init__(self):
         """Initialize the game"""
@@ -69,6 +73,7 @@ class Game:
         self.score_config = score_config
         self.score = 0
         self.high_score = 0
+        self.load_high_score()  # Load persistent high score from file
 
         # Power-up configuration
         self.powerup_config = powerup_config
@@ -89,10 +94,29 @@ class Game:
         self.kill_flashes = []  # List of KillFlash dataclasses
         self.pickup_flashes = []  # List of PickupFlash dataclasses
 
+        # Pause screen optimization
+        self.pause_surface = None  # Captured screen for pause overlay
+
         # Background tile loading (fallback to solid color if fails)
         self.background_tile = None
         with contextlib.suppress(pygame.error, FileNotFoundError):
             self.background_tile = pygame.image.load("assets/sprites/tile_background.png").convert()
+
+    def load_high_score(self):
+        """Load high score from file. Defaults to 0 if file doesn't exist or is invalid."""
+        try:
+            if self.HIGHSCORE_FILE.exists():
+                score_text = self.HIGHSCORE_FILE.read_text().strip()
+                self.high_score = int(score_text)
+        except (ValueError, OSError):
+            # File is corrupted or unreadable, default to 0
+            self.high_score = 0
+
+    def save_high_score(self):
+        """Save high score to file."""
+        # If we can't save, just continue - don't crash the game
+        with contextlib.suppress(OSError):
+            self.HIGHSCORE_FILE.write_text(str(self.high_score))
 
     def handle_events(self):
         """Process game events during PLAYING state"""
@@ -100,6 +124,8 @@ class Game:
             if event.type == pygame.QUIT:
                 self.running = False
             elif event.type == pygame.KEYDOWN and event.key in (pygame.K_ESCAPE, pygame.K_p):
+                # Capture current screen for pause overlay (optimization)
+                self.pause_surface = self.screen.copy()
                 # Toggle pause
                 self.state = GameState.PAUSED
 
@@ -296,6 +322,7 @@ class Game:
                 # Update high score
                 if self.score > self.high_score:
                     self.high_score = self.score
+                    self.save_high_score()  # Persist to file immediately
                 self.state = GameState.GAME_OVER
                 return
 
@@ -739,8 +766,12 @@ class Game:
 
     def render_paused(self):
         """Render the pause overlay."""
-        # First render the game state underneath
-        self.render()
+        # Blit the captured pause surface (performance optimization)
+        if self.pause_surface:
+            self.screen.blit(self.pause_surface, (0, 0))
+        else:
+            # Fallback if pause_surface is None (shouldn't happen)
+            self.render()
 
         # Draw semi-transparent overlay
         overlay = pygame.Surface((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))

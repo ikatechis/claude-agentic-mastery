@@ -677,377 +677,12 @@
 
 ---
 
-## Session 4: Power-Up System & Multi-Agent Workflow ✅ COMPLETE
-
-**Date:** December 27, 2024
-**Duration:** ~3 hours
-**Git Commits:** cdff27c (power-up system), ae59821 (power-up sprites)
-**Branch:** feat/logging-system (not yet merged)
-
-### What We Built
-
-#### Power-Up System (src/entities/powerup.py, src/config.py) ✅
-- ✅ **Three Power-Up Types**
-  - Health Pack: Restores 30-50 HP (green)
-  - Speed Boost: 1.5x speed for 5-10 seconds (cyan)
-  - Shield: Blocks 3 hits (gold)
-- ✅ **PowerupConfig Dataclass**
-  - 27 configuration parameters
-  - Drop chance, lifetime, colors, effect values
-  - Centralized tuning for game balance
-- ✅ **Enum-Based Type System**
-  - `PowerupType.HEALTH`, `.SPEED`, `.SHIELD`
-  - Type-safe alternative to magic strings
-  - Easy to extend with new types
-- ✅ **Lifetime Management**
-  - 10-second despawn timer
-  - 2-second blink warning (toggles visibility)
-  - Auto-cleanup when expired
-
-#### Player Integration (src/entities/player.py) ✅
-- ✅ **Timed Effect System**
-  - Speed boost: countdown timer, auto-expires
-  - `speed_multiplier` applied to movement
-  - Consistent with existing cooldown pattern
-- ✅ **Shield Hit Counter**
-  - `shield_hits_remaining` integer counter
-  - Blocks damage in `take_damage()` method
-  - Consumes damage cooldown (prevents instant depletion)
-- ✅ **Effect Methods**
-  - `apply_speed_boost(multiplier, duration)`
-  - `apply_shield(hits)`
-  - `has_shield()`, `has_speed_boost()` queries
-
-#### Game Loop Integration (src/game.py) ✅
-- ✅ **Spawning System**
-  - 20% drop chance on zombie kill
-  - Spawns at zombie death position
-  - Random type selection
-- ✅ **Collection System**
-  - Circle collision detection with player
-  - Effect application + pickup flash creation
-  - Collect-then-remove pattern (no mid-iteration removal)
-- ✅ **Update Loop**
-  - Powerup lifetime countdown
-  - Blink animation during warning phase
-  - List comprehension filtering for expired powerups
-
-#### Visual Effects (src/game.py) ✅
-- ✅ **Pickup Flash**
-  - Colored circle at collection point
-  - Color matches power-up type
-  - Fades over 0.15 seconds
-- ✅ **Active Effect Indicators**
-  - Shield: Gold circle around player + hit counter text
-  - Speed Boost: Cyan progress bar above player
-- ✅ **Rendering Order**
-  - Background → Zombies → Powerups → Flashes → Player → Effects → UI
-
-#### Testing & Quality (tests/test_powerup.py, tests/test_game.py) ✅
-- ✅ **19 Unit Tests** (test_powerup.py)
-  - Creation, lifetime, blink animation, effects
-  - 97% coverage for powerup.py
-- ✅ **5 Integration Tests** (test_game.py)
-  - Initialization, collection, expiration, visual effects
-- ✅ **Coverage: 69%** (up from 53%)
-  - config.py: 100%, utils.py: 100%
-  - player.py: 66%, powerup.py: 97%
-  - 52 tests passing (all green)
-
-### Concepts Learned
-
-#### Multi-Agent Workflow (Plan Mode)
-- **Plan Mode workflow**
-  - Read-only exploration before implementation
-  - Multi-agent parallelization
-  - Synthesized findings into comprehensive plan
-- **Explore Agents (3 parallel)**
-  - Agent 1: Entity patterns (Player/Zombie structure)
-  - Agent 2: Collision detection system
-  - Agent 3: Visual effects implementation
-  - Each agent researched different aspect simultaneously
-- **Plan Agent (architecture design)**
-  - Synthesized findings from 3 Explore agents
-  - Created 5-phase implementation plan
-  - Identified critical files and architectural decisions
-- **User approval workflow**
-  - AskUserQuestion for preferences (types, spawning, despawn)
-  - ExitPlanMode to present plan
-  - Begin implementation after approval
-
-#### Implementation Patterns
-- **Incremental Development**
-  - Phase 1: Foundation (config + entity class)
-  - Phase 2: Player Integration (timed effects)
-  - Phase 3: Game Loop Integration (spawning + collection)
-  - Phase 4: Visual Effects (rendering + indicators)
-  - Phase 5: Testing & Polish
-  - Each phase testable independently
-- **List Comprehension Lifecycle**
-  - `update()` returns False when expired
-  - Filter with list comprehension: `[p for p in powerups if p.update(dt)]`
-  - Auto-cleanup pattern
-- **Collect-Then-Remove Pattern**
-  - Can't modify list during iteration (RuntimeError)
-  - Collect items to remove in separate list
-  - Filter after iteration completes
-- **Effect Data Dictionary**
-  - `apply_effect()` returns `{"type": "health", "amount": 40, "color": (0,255,0)}`
-  - Game loop uses data for visual feedback
-  - Flexible, extensible pattern
-
-#### Game Design Decisions
-- **Shield + Cooldown Interaction**
-  - Shield blocks damage but consumes cooldown
-  - Prevents instant 3-hit depletion from zombie horde
-  - Creates tactical retreat gameplay
-- **Speed Boost Stacking**
-  - Refreshes timer, doesn't multiply multiplier
-  - 1.5x stays 1.5x (no exponential stacking)
-  - Balanced, predictable behavior
-- **Health Capping**
-  - `apply_effect()` returns actual amount restored
-  - Prevents over-healing beyond max HP
-  - Used for accurate damage popups
-
-### Verification Discipline
-
-**APIs Verified This Session:**
-- Python Enum with `auto()` for type-safe enumerations
-- `random.choice(list)` for random selection
-- `random.randint(min, max)` and `random.uniform(min, max)` for ranges
-- List comprehension filtering patterns
-- Dataclass field types and `dataclasses.replace()`
-
-**Best Practices Applied:**
-- Enum-based type system (not magic strings)
-- Dataclass configuration (type-safe, organized)
-- DRY principle (single `load_sprite` utility)
-- Test-driven development (tests guide implementation)
-- Multi-agent planning (understand before coding)
-
-### Key Lessons
-
-1. **Plan Mode is powerful for complex features**
-   - 3 parallel Explore agents researched in minutes
-   - Plan agent synthesized into comprehensive architecture
-   - Zero wasted effort, no refactoring needed
-   - Code worked first try
-
-2. **Incremental implementation reduces risk**
-   - 5 phases with clear boundaries
-   - Each phase testable independently
-   - Tests caught issues early
-   - Coverage increased 16% (53% → 69%)
-
-3. **Effect data dictionaries enable flexibility**
-   - Single `apply_effect()` method for all types
-   - Returns data for visual feedback
-   - Easy to add new effect types
-   - Decouples effect logic from rendering
-
-4. **Cooldown sharing prevents exploits**
-   - Shield + damage cooldown interaction
-   - Creates counterplay mechanics
-   - Prevents instant shield depletion
-   - More engaging gameplay
-
-5. **Type safety catches bugs early**
-   - Enum prevents typos (`PowerupType.HEALTH` vs `"helth"`)
-   - Dataclasses provide IDE autocomplete
-   - mypy catches type mismatches
-   - Fewer runtime errors
-
-### Statistics
-
-- **Files Created:** 2 (powerup.py, test_powerup.py)
-- **Files Modified:** 4 (config.py, player.py, game.py, test_game.py)
-- **Lines Added:** ~400 (code + tests)
-- **Tests:** 52 passing (19 powerup + 5 integration + 28 existing)
-- **Coverage:** 69% (up from 53%, +16%)
-- **Agents Used:** 4 (3 Explore + 1 Plan)
-- **Phases:** 5 (Foundation, Player, Game Loop, Visual, Testing)
-- **All quality checks:** ✅ PASSING (ruff, mypy, pytest)
-
-### Session 4 Final Status
-
-**Completion:** 100% ✅
-**All Features Working:**
-1. ✅ Three power-up types with distinct effects
-2. ✅ 20% drop rate from zombie kills
-3. ✅ 10-second lifetime with blink warning
-4. ✅ Timed effects (speed boost)
-5. ✅ Hit counter effects (shield)
-6. ✅ Visual indicators for active effects
-7. ✅ Comprehensive test suite (52 tests, 69% coverage)
-8. ✅ Multi-agent workflow demonstration
-
-**Known Issues:**
-- Power-ups use colored circles (no distinct sprites yet)
-- Active effect indicators could be more polished with icons
-
----
-
-## Session 4.5: Comprehensive Logging System ✅ COMPLETE
-
-**Date:** December 28, 2024
-**Duration:** ~1.5 hours
-**Git Commits:** c06766d (logging system), 2cdab5d (logging docs)
-**Branch:** feat/logging-system (current)
-
-### What We Built
-
-#### Logging Infrastructure (src/logger.py, src/main.py) ✅
-- ✅ **Dual-Handler Logging System**
-  - Console handler: WARNING+ (default) or DEBUG+ (GAME_DEBUG=1)
-  - File handler: DEBUG+ (always) for full playtest archiving
-  - Timestamped log files: `logs/game_YYYY-MM-DD_HHMMSS.log`
-  - Centralized `get_logger(__name__)` pattern across all modules
-- ✅ **Environment Variable Control**
-  - `GAME_DEBUG=1` environment flag enables verbose console output
-  - Normal mode: quiet console, full file logs
-  - Debug mode: verbose console + full file logs
-- ✅ **Log File Management**
-  - Automatic timestamping for playtest session archiving
-  - Logs directory excluded from git (in .gitignore)
-  - Each run creates new log file (no overwriting)
-
-#### Module Integration ✅
-- ✅ **Replaced Silent Error Suppression**
-  - Removed all `contextlib.suppress` usage
-  - Added try/except blocks with proper logging
-  - All errors now tracked and discoverable
-  - Graceful degradation with logged warnings
-- ✅ **Entity Event Logging**
-  - Player: damage events, attack actions, power-up collection
-  - Zombie: spawn events, death events
-  - Power-ups: spawn, collection, expiration
-  - Game: wave progression, state changes, high score updates
-
-#### Documentation ✅
-- ✅ **CLAUDE.md Logging Guidelines** (comprehensive 7-section guide)
-  - When to use each log level (DEBUG, INFO, WARNING, ERROR)
-  - Error handling patterns (replace silent suppression)
-  - Logging best practices and examples
-  - Testing logs during development
-  - Module logging pattern
-  - Log file archiving
-  - Checklist for new modules
-- ✅ **ARCHITECTURE.md Logging Section**
-  - Logging system architecture details
-  - Handler configuration documentation
-  - Module logging pattern
-  - Error handling with logging examples
-- ✅ **README.md Updated**
-  - Added "Development Features" section
-  - Documented debug mode flag
-  - Added logger.py to project structure
-  - Updated run commands with debug mode
-
-### Concepts Learned
-
-#### Professional Logging Practices
-- **Dual-handler pattern**
-  - Interactive debugging (console)
-  - Playtest archiving (file)
-  - Different log levels per handler
-  - Environment-based configuration
-- **Structured logging levels**
-  - DEBUG: Detailed state for debugging (verbose)
-  - INFO: Normal operations and milestones
-  - WARNING: Recoverable errors with fallbacks
-  - ERROR: Critical failures requiring attention
-- **Error visibility**
-  - Never suppress errors silently
-  - Always log exceptions with context
-  - Use `exc_info=True` for stack traces
-  - Playtest issues become discoverable
-
-#### Python Logging Module
-- **Logger hierarchy**
-  - Module-based logger naming (`__name__`)
-  - Hierarchical logger control (future capability)
-  - Clear source identification in logs
-- **Handler configuration**
-  - StreamHandler for console output
-  - FileHandler for persistent logs
-  - Custom formatters per handler
-  - Level filtering per handler
-- **Environment-based configuration**
-  - `os.environ.get("GAME_DEBUG")` for runtime control
-  - No code changes to toggle verbosity
-  - Production-friendly debugging
-
-### Verification Discipline
-
-**APIs Verified:**
-- Python `logging` module (handlers, formatters, levels)
-- `logging.getLogger(__name__)` for module-based loggers
-- `os.environ.get()` for environment variables
-- `datetime.now().strftime()` for timestamp formatting
-- `pathlib.Path` for log file management
-
-**Best Practices Applied:**
-- Consistent logging pattern across all modules
-- Descriptive log messages with context (coordinates, IDs, values)
-- Error handling with logged warnings instead of silent suppression
-- Comprehensive documentation for team practices
-
-### Key Lessons
-
-1. **Logging is essential for game development**
-   - Playtests generate valuable debugging data
-   - Timestamped logs enable post-session analysis
-   - Silent errors are impossible to debug
-   - File logs preserve full history
-
-2. **Debug mode improves development workflow**
-   - Quick toggle via environment variable
-   - No code changes needed
-   - Verbose when needed, quiet for playtests
-   - Console + file gives best of both worlds
-
-3. **Documentation scales team practices**
-   - Logging guidelines prevent inconsistency
-   - New modules follow established patterns
-   - Code review easier with documented standards
-   - Future contributors understand practices
-
-4. **Error visibility prevents bugs**
-   - Silent suppression hides problems
-   - Logged warnings surface issues early
-   - Stack traces aid debugging
-   - Playtest logs reveal edge cases
-
-### Statistics
-
-- **Files Created:** 1 (logger.py)
-- **Files Modified:** 10+ (all modules + docs)
-- **Lines Added:** ~150 (logging system + integration)
-- **Documentation:** 3 files updated (CLAUDE.md, ARCHITECTURE.md, README.md)
-- **Error Suppression Removed:** All `contextlib.suppress` replaced
-- **Logging Coverage:** 100% of modules now have logging
-- **All quality checks:** ✅ PASSING (ruff, mypy, pytest)
-
-### Session 4.5 Final Status
-
-**Completion:** 100% ✅
-**All Features Working:**
-1. ✅ Dual-handler logging (console + file)
-2. ✅ Debug mode environment flag
-3. ✅ Timestamped log files
-4. ✅ All modules integrated with logging
-5. ✅ Silent error suppression eliminated
-6. ✅ Comprehensive documentation
-
----
-
 ## Overall Progress
 
-**Current Phase:** 3 - Skills & Subagents
+**Current Phase:** 3 - Agentic Tools Basics
 **Current Session:** 4.5 / 15 (100% complete)
 **Sessions Completed:** 4.5 / 15 = 30%
-**Game Completion:** ~45% (core mechanics + power-ups + logging, needs more features)
+**Game Completion:** ~45% (core mechanics + power-ups + logging, needs weapons/variants)
 
 ### Zombie Survival Features
 
@@ -1065,7 +700,7 @@
 - [x] AI asset generation setup ✅
 - [x] Power-ups and collectibles ✅
 - [x] Logging system with debug mode ✅
-- [ ] Power-up sprites (visual distinction)
+- [ ] Ranged combat (weapons, shooting)
 - [ ] Different zombie types
 - [ ] Sound and music
 - [ ] Particle effects
@@ -1095,20 +730,27 @@
 ## Next Steps
 
 **Current:** Ready for Session 5!
-**Phase 3 Goals:** Skills & Subagents (Sessions 4-6)
+**Phase 3 Goals:** Agentic Tools Basics (Sessions 5-6)
 
 ### Session 5 Planned Tasks:
-1. **Zombie variants** - Different types with unique behaviors (fast, tank, exploding)
-2. **Character animations** - Sprite-based animation system (idle, walking, attacking)
-3. **Enhanced power-up visuals** - Distinct sprites for each type
-4. **Sound effects** - Attack sounds, zombie groans, ambient music
-5. **Particle effects** - Blood splatter, kill effects, power-up sparkles
+1. **pygame-patterns Skill** - Codify projectile/mouse/sprite patterns
+2. **entity-builder Subagent** - Auto-generate entity classes
+3. **Ranged Combat** - Mouse aim + click to shoot (PISTOL only)
+4. **Projectile System** - Bullets with collision detection
+5. **Ammunition** - Ammo tracking and reload
+6. **Ammo UI** - Display ammo count on screen
 
-### Agentic Concepts to Learn (Session 4-6):
-- Advanced subagent composition
-- Complex MCP server workflows
-- Skill composition and chaining
-- Context management optimization
+### Session 6 Planned Tasks:
+1. **AMMO Power-up** - Extend existing power-up system
+2. **Zombie Variants** - Normal, Fast, Tank types
+3. **Weapon Upgrades** - SHOTGUN, RIFLE
+4. **Balance & Polish** - Tune difficulty and drops
+
+### Agentic Concepts to Learn (Phase 3):
+- Create custom Skill (pygame-patterns)
+- Create custom Subagent (entity-builder)
+- Permission management in skills
+- Use existing skills (game-artist, python-testing)
 
 ---
 
@@ -1118,5 +760,3 @@
 
 Every session must maintain verification-first discipline.
 Build with confidence by verifying before coding.
-
-**🎮 Sessions 1-4.5 complete! Ready for zombie variants and animations! 🧟‍♂️**

@@ -17,18 +17,24 @@ Top-down zombie survival game built with pygame. This is a learning project for 
 # Install dependencies (first time only)
 uv sync
 
-# Run the game
+# Run the game (normal mode - quiet console, full file logs)
 uv run python src/main.py
+
+# Run with debug mode (verbose console output)
+GAME_DEBUG=1 uv run python src/main.py
 
 # Run with display (if available)
 DISPLAY=:0 uv run python src/main.py
 ```
 
+**Log files**: Saved to `logs/game_YYYY-MM-DD_HHMMSS.log` for playtest archiving
+
 ## Current Architecture
 
 ```
 src/
-├── main.py              # Entry point, starts the game
+├── main.py              # Entry point, logging initialization
+├── logger.py            # Logging configuration (console + file)
 ├── game.py              # Main game loop, event handling, rendering
 ├── game_state.py        # Game state enum (MENU, PLAYING, PAUSED, GAME_OVER)
 ├── config.py            # Centralized configuration (dataclasses)
@@ -199,6 +205,221 @@ ref_read_url("https://www.pygame.org/docs/ref/sprite.html#pygame.sprite.spriteco
 uv run python src/main.py
 ```
 
+## Logging Guidelines
+
+**All new scripts and modules MUST follow these logging practices:**
+
+### 1. Adding Logging to New Modules
+
+**Standard pattern for all Python files:**
+
+```python
+from logger import get_logger
+
+logger = get_logger(__name__)
+```
+
+**Example in a new module:**
+
+```python
+"""My new game module."""
+
+from logger import get_logger
+
+logger = get_logger(__name__)
+
+
+def my_function():
+    """Do something important."""
+    logger.debug("Starting my_function")
+    try:
+        # ... code ...
+        logger.info("Operation completed successfully")
+    except SomeError as e:
+        logger.warning(f"Operation failed: {e}")
+```
+
+### 2. When to Use Each Log Level
+
+**DEBUG** (only visible with GAME_DEBUG=1 console, always in file):
+- Detailed state changes for debugging
+- Entity lifecycle events (spawn, death, movement)
+- Sprite loading attempts and fallbacks
+- Power-up collections and expirations
+- Attack attempts and combat calculations
+- Frame-by-frame state dumps (use sparingly)
+
+**Examples:**
+```python
+logger.debug(f"Zombie spawned at ({int(x)}, {int(y)})")
+logger.debug(f"Player took {damage} damage, health: {health}/{max_health}")
+logger.debug(f"Sprite not found: {path}, using fallback")
+logger.debug(f"Speed boost applied: {multiplier}x for {duration}s")
+```
+
+**INFO** (visible in file only by default):
+- Normal game operations and milestones
+- Successful file operations (save/load)
+- Game lifecycle events (start, end)
+- Configuration initialization
+- Wave progression and score milestones
+
+**Examples:**
+```python
+logger.info("Game started")
+logger.info(f"High score loaded: {self.high_score}")
+logger.info(f"Wave {wave_number} complete")
+logger.info("Logging initialized - log file: {log_file}")
+```
+
+**WARNING** (visible in console and file):
+- Recoverable errors (file not found, using fallback)
+- Missing resources with graceful degradation
+- Failed save operations
+- Unexpected but handled conditions
+- Performance concerns (if FPS drops below threshold)
+
+**Examples:**
+```python
+logger.warning("Background tile not found, using solid color fallback")
+logger.warning(f"Failed to save high score: {e}")
+logger.warning("High score file corrupted, defaulting to 0")
+logger.warning(f"FPS dropped to {fps}, expected 60")
+```
+
+**ERROR** (visible in console and file):
+- Unhandled exceptions
+- Critical failures that affect gameplay
+- Data corruption without recovery
+- System-level failures
+
+**Examples:**
+```python
+logger.error(f"Unhandled exception: {e}", exc_info=True)
+logger.error("Failed to initialize pygame display")
+logger.error(f"Critical config file missing: {config_path}")
+```
+
+### 3. Error Handling Pattern
+
+**NEVER suppress errors silently. Always log them.**
+
+**❌ BAD (silent suppression):**
+```python
+try:
+    save_data()
+except OSError:
+    pass  # Silent failure - bad!
+```
+
+**✅ GOOD (logged warning):**
+```python
+try:
+    save_data()
+    logger.info("Data saved successfully")
+except OSError as e:
+    logger.warning(f"Failed to save data: {e}")
+```
+
+**✅ GOOD (with contextlib.suppress replacement):**
+```python
+# Before:
+with contextlib.suppress(pygame.error, FileNotFoundError):
+    sprite = load_sprite(path)
+
+# After:
+try:
+    sprite = load_sprite(path)
+    logger.debug(f"Loaded sprite: {path}")
+except (pygame.error, FileNotFoundError):
+    logger.debug(f"Sprite not found: {path}, using fallback")
+    sprite = None
+```
+
+### 4. Logging Best Practices
+
+**DO:**
+- Use f-strings for readable log messages
+- Include context (entity IDs, coordinates, values)
+- Log at appropriate levels (don't spam DEBUG in INFO)
+- Use `exc_info=True` for ERROR logs to get stack traces
+- Include units in numeric values (e.g., "5.2s", "120 HP", "(150, 200)")
+- Make log messages searchable (consistent terminology)
+
+**DON'T:**
+- Log sensitive data (user passwords, API keys)
+- Log in tight loops (every frame) unless using DEBUG level
+- Use print() statements (always use logger)
+- Duplicate log messages (one log per event)
+- Log excessively verbose data structures (use summary info)
+
+**Example - Entity lifecycle logging:**
+```python
+class Enemy:
+    def __init__(self, x, y, enemy_type):
+        self.id = generate_id()
+        logger.debug(f"Enemy {enemy_type} spawned: ID={self.id}, pos=({int(x)}, {int(y)})")
+
+    def take_damage(self, amount):
+        old_health = self.health
+        self.health -= amount
+        logger.debug(f"Enemy ID={self.id} took {amount} damage, health: {self.health}/{self.max_health}")
+
+        if self.health <= 0:
+            logger.debug(f"Enemy ID={self.id} died at ({int(self.x)}, {int(self.y)})")
+```
+
+### 5. Testing Logs During Development
+
+**Normal run (quiet console, full file logs):**
+```bash
+uv run python src/main.py
+# Check logs/game_YYYY-MM-DD_HHMMSS.log for full details
+```
+
+**Debug run (verbose console + full file logs):**
+```bash
+GAME_DEBUG=1 uv run python src/main.py
+# See DEBUG messages in real-time on console
+```
+
+**Viewing log files:**
+```bash
+# View latest log
+ls -t logs/*.log | head -1 | xargs cat
+
+# Tail live log in debug mode
+tail -f logs/game_*.log
+
+# Search for errors
+grep -i error logs/game_*.log
+
+# Filter by level
+grep '\[WARNING\]' logs/game_*.log
+```
+
+### 6. Log File Archiving
+
+- Log files are timestamped: `logs/game_YYYY-MM-DD_HHMMSS.log`
+- Each playtest session creates a new file
+- Files are excluded from git (in `.gitignore`)
+- Review logs after playtests to identify issues
+- Archive important logs for bug reports
+
+### 7. Checklist for New Modules
+
+When creating a new Python file:
+
+- [ ] Import logger: `from logger import get_logger`
+- [ ] Initialize logger: `logger = get_logger(__name__)`
+- [ ] Replace print() with logger calls
+- [ ] Add DEBUG logs for detailed state changes
+- [ ] Add INFO logs for normal operations
+- [ ] Add WARNING logs for recoverable errors (with try/except)
+- [ ] Add ERROR logs for critical failures (with exc_info=True)
+- [ ] Test with both normal and GAME_DEBUG=1 modes
+- [ ] Review log output for clarity and usefulness
+
 ## Project Goals
 
 Building through 15 sessions to learn:
@@ -235,10 +456,10 @@ Building through 15 sessions to learn:
 **Session 3 Complete:**
 - ✅ Wave-based spawning with exponential scaling
 - ✅ Score tracking and UI display
-- ✅ Game states (MENU, PLAYING, GAME_OVER)
+- ✅ Game states (MENU, PLAYING, PAUSED, GAME_OVER)
 - ✅ Menu and game over screens
 - ✅ Wave notifications
-- ✅ High score system (in-memory)
+- ✅ High score system (file-based)
 - ✅ Pause state (ESC/P key)
 
 **Session 4 Complete:**
@@ -248,6 +469,13 @@ Building through 15 sessions to learn:
 - ✅ Visual effects (kill flashes, damage popups, pickup flashes)
 - ✅ Sprite loading system with fallbacks
 - ✅ Test coverage: 52 tests, 69% coverage
+
+**Session 4.5 Complete:**
+- ✅ Timestamped log files for playtest archiving
+- ✅ Debug mode flag (GAME_DEBUG=1)
+- ✅ Dual output: console (WARNING+) and file (DEBUG+)
+- ✅ Replaced silent error suppression with logged warnings
+- ✅ Entity event logging (damage, spawns, power-ups)
 
 ## Future Sessions Roadmap
 

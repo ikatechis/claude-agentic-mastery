@@ -6,7 +6,10 @@ from enum import Enum, auto
 import pygame
 
 from config import powerup_config
+from logger import get_logger
 from utils import load_sprite
+
+logger = get_logger(__name__)
 
 
 class PowerupType(Enum):
@@ -54,6 +57,8 @@ class Powerup:
         # Blink state (used during warning phase)
         self.blink_timer = 0.0
 
+        logger.debug(f"Powerup spawned: {self.powerup_type.name} at ({int(x)}, {int(y)})")
+
     def _get_color(self) -> tuple:
         """Get the color for this power-up type."""
         if self.powerup_type == PowerupType.HEALTH:
@@ -87,6 +92,7 @@ class Powerup:
 
         # Check if expired
         if self.lifetime <= 0:
+            logger.debug(f"Powerup expired: {self.powerup_type.name}")
             return False
 
         # Handle blink warning in final seconds
@@ -136,6 +142,7 @@ class Powerup:
             player.health = min(player.max_health, player.health + restore_amount)
             actual_restored = player.health - old_health
 
+            logger.debug(f"Powerup collected: HEALTH restored {int(actual_restored)} HP")
             return {"type": "health", "amount": actual_restored, "color": self.color}
 
         elif self.powerup_type == PowerupType.SPEED:
@@ -145,10 +152,12 @@ class Powerup:
             )
             player.apply_speed_boost(self.config.speed_multiplier, duration)
 
+            logger.debug(f"Powerup collected: SPEED {duration:.1f}s")
             return {"type": "speed", "duration": duration, "color": self.color}
 
         else:  # SHIELD
             # Add shield hits
             player.apply_shield(self.config.shield_hits)
 
+            logger.debug(f"Powerup collected: SHIELD {self.config.shield_hits} hits")
             return {"type": "shield", "hits": self.config.shield_hits, "color": self.color}

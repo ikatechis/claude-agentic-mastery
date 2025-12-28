@@ -3,7 +3,6 @@ Main game class for Zombie Survival
 Handles the game loop, rendering, and event processing
 """
 
-import contextlib
 import dataclasses
 import math
 import random
@@ -25,6 +24,9 @@ from entities.player import Player
 from entities.powerup import Powerup
 from entities.zombie import Zombie
 from game_state import GameState
+from logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class Game:
@@ -99,8 +101,11 @@ class Game:
 
         # Background tile loading (fallback to solid color if fails)
         self.background_tile = None
-        with contextlib.suppress(pygame.error, FileNotFoundError):
+        try:
             self.background_tile = pygame.image.load("assets/sprites/tile_background.png").convert()
+            logger.debug("Background tile loaded successfully")
+        except (pygame.error, FileNotFoundError):
+            logger.info("Background tile not found, using solid color fallback")
 
     def load_high_score(self):
         """Load high score from file. Defaults to 0 if file doesn't exist or is invalid."""
@@ -108,15 +113,21 @@ class Game:
             if self.HIGHSCORE_FILE.exists():
                 score_text = self.HIGHSCORE_FILE.read_text().strip()
                 self.high_score = int(score_text)
-        except (ValueError, OSError):
-            # File is corrupted or unreadable, default to 0
+                logger.info(f"High score loaded: {self.high_score}")
+            else:
+                logger.info("No high score file found, starting fresh")
+                self.high_score = 0
+        except (ValueError, OSError) as e:
+            logger.warning(f"Failed to load high score: {e}, defaulting to 0")
             self.high_score = 0
 
     def save_high_score(self):
         """Save high score to file."""
-        # If we can't save, just continue - don't crash the game
-        with contextlib.suppress(OSError):
+        try:
             self.HIGHSCORE_FILE.write_text(str(self.high_score))
+            logger.info(f"High score saved: {self.high_score}")
+        except OSError as e:
+            logger.warning(f"Failed to save high score: {e}")
 
     def handle_events(self):
         """Process game events during PLAYING state"""

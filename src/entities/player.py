@@ -6,7 +6,10 @@ Handles player movement, rendering, and collision
 import pygame
 
 from config import player_config
+from logger import get_logger
 from utils import load_sprite
+
+logger = get_logger(__name__)
 
 
 class Player(pygame.sprite.Sprite):
@@ -166,12 +169,14 @@ class Player(pygame.sprite.Sprite):
                 # Shield blocks the damage
                 self.shield_hits_remaining -= 1
                 self.damage_cooldown = self.damage_cooldown_time
+                logger.debug(f"Shield blocked damage, {self.shield_hits_remaining} hits remaining")
                 return True  # Hit was blocked by shield
             else:
                 # No shield, apply damage
                 self.health -= amount
                 self.health = max(0.0, self.health)  # Don't go below 0
                 self.damage_cooldown = self.damage_cooldown_time
+                logger.debug(f"Took {amount} damage, health: {int(self.health)}/{self.max_health}")
                 return True
         return False
 
@@ -191,6 +196,7 @@ class Player(pygame.sprite.Sprite):
         """
         self.is_attacking = True
         self.attack_cooldown = self.attack_cooldown_time
+        logger.debug(f"Player attacked (range: {self.attack_range})")
 
     def apply_speed_boost(self, multiplier: float, duration: float) -> None:
         """Apply a speed boost effect.
@@ -201,6 +207,7 @@ class Player(pygame.sprite.Sprite):
         """
         self.speed_multiplier = multiplier
         self.speed_boost_timer = duration
+        logger.debug(f"Speed boost applied: {multiplier}x for {duration}s")
 
     def apply_shield(self, hits: int) -> None:
         """Apply a shield that blocks incoming damage.
@@ -209,6 +216,7 @@ class Player(pygame.sprite.Sprite):
             hits: Number of hits the shield can block
         """
         self.shield_hits_remaining += hits
+        logger.debug(f"Shield applied: {hits} hits, total: {self.shield_hits_remaining}")
 
     def has_shield(self) -> bool:
         """Check if player currently has an active shield.

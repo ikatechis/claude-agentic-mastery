@@ -3,7 +3,10 @@ import math
 import pygame
 
 from config import zombie_config
+from logger import get_logger
 from utils import load_sprite
+
+logger = get_logger(__name__)
 
 
 class Zombie:
@@ -38,6 +41,8 @@ class Zombie:
         self.original_sprite = None
         if self.sprite_image:
             self.original_sprite = self.sprite_image.copy()
+
+        logger.debug(f"Zombie spawned at ({int(x)}, {int(y)})")
 
     def update(self, delta_time, player_x, player_y):
         """Update zombie state - chase the player.

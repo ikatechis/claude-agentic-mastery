@@ -31,6 +31,9 @@ Thumbs.db
 # Game assets (if large)
 assets/
 
+# Game logs
+logs/
+
 # Coverage reports
 htmlcov/
 .coverage

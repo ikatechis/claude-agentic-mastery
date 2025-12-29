@@ -5,7 +5,8 @@ Handles player movement, rendering, and collision
 
 import pygame
 
-from config import player_config
+from config import player_config, weapon_config
+from entities.projectile import Projectile
 from logger import get_logger
 from utils import load_sprite
 
@@ -48,11 +49,17 @@ class Player(pygame.sprite.Sprite):
         self.damage_cooldown = 0.0  # Seconds until can take damage again
         self.damage_cooldown_time = self.config.damage_cooldown
 
-        # Attack system
+        # Attack system (melee)
         self.attack_range = self.config.attack_range
         self.attack_cooldown = 0.0  # Seconds until can attack again
         self.attack_cooldown_time = self.config.attack_cooldown
         self.is_attacking = False  # True during attack frame
+
+        # Weapon system (ranged)
+        self.weapon_config = weapon_config
+        self.ammo = self.weapon_config.max_ammo
+        self.max_ammo = self.weapon_config.max_ammo
+        self.fire_cooldown = 0.0  # Seconds until can fire again
 
         # Power-up effects
         self.speed_multiplier = 1.0  # Speed boost multiplier (1.0 = normal)
@@ -82,6 +89,10 @@ class Player(pygame.sprite.Sprite):
         # Update attack cooldown
         if self.attack_cooldown > 0:
             self.attack_cooldown -= delta_time
+
+        # Update fire cooldown
+        if self.fire_cooldown > 0:
+            self.fire_cooldown -= delta_time
 
         # Update speed boost timer
         if self.speed_boost_timer > 0:
@@ -197,6 +208,38 @@ class Player(pygame.sprite.Sprite):
         self.is_attacking = True
         self.attack_cooldown = self.attack_cooldown_time
         logger.debug(f"Player attacked (range: {self.attack_range})")
+
+    def fire(self) -> Projectile | None:
+        """Fire a projectile in the facing direction.
+
+        Returns:
+            Projectile instance if fired successfully, None if out of ammo or on cooldown
+        """
+        # Check ammo and cooldown
+        if self.ammo <= 0:
+            logger.debug("Cannot fire: out of ammo")
+            return None
+
+        if self.fire_cooldown > 0:
+            logger.debug("Cannot fire: weapon on cooldown")
+            return None
+
+        # Consume ammo
+        self.ammo -= 1
+        self.fire_cooldown = self.weapon_config.fire_rate
+
+        # Create projectile at player position, facing player's direction
+        projectile = Projectile(self.x, self.y, self.angle)
+        logger.debug(f"Player fired projectile (ammo: {self.ammo}/{self.max_ammo})")
+
+        return projectile
+
+    def reload(self) -> None:
+        """Reload weapon to max ammo (instant for now)."""
+        if self.ammo < self.max_ammo:
+            old_ammo = self.ammo
+            self.ammo = self.max_ammo
+            logger.debug(f"Player reloaded ({old_ammo} → {self.ammo})")
 
     def apply_speed_boost(self, multiplier: float, duration: float) -> None:
         """Apply a speed boost effect.

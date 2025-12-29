@@ -154,6 +154,32 @@ class DamagePopup:
     timer: float
 
 
+@dataclass
+class ProjectileConfig:
+    """Projectile/bullet settings"""
+
+    # Movement
+    speed: float = 500.0  # Pixels per second
+
+    # Visual
+    radius: int = 4  # Collision radius
+    color: tuple = (255, 255, 0)  # Yellow
+    sprite_path: str = "assets/sprites/projectile.png"
+
+    # Behavior
+    lifetime: float = 2.0  # Seconds before despawn
+    damage: int = 10  # Damage to zombies
+
+
+@dataclass
+class WeaponConfig:
+    """Weapon/shooting settings (used by Player)"""
+
+    max_ammo: int = 30  # Maximum ammunition
+    fire_rate: float = 0.3  # Seconds between shots
+    reload_time: float = 0.0  # Instant reload for now
+
+
 # Global config instances
 game_config = GameConfig()
 player_config = PlayerConfig()
@@ -162,3 +188,5 @@ wave_config = WaveConfig()
 score_config = ScoreConfig()
 ui_config = UIConfig()
 powerup_config = PowerupConfig()
+projectile_config = ProjectileConfig()
+weapon_config = WeaponConfig()

@@ -91,6 +91,9 @@ class Game:
         # Power-up management
         self.powerups = []
 
+        # Projectile management
+        self.projectiles = []
+
         # Visual effects
         self.damage_popups = []  # List of DamagePopup dataclasses
         self.kill_flashes = []  # List of KillFlash dataclasses
@@ -263,9 +266,61 @@ class Game:
         # Update player
         self.player.update(delta_time)
 
+        # Handle shooting (F key) and reload (R key)
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_f]:
+            projectile = self.player.fire()
+            if projectile:
+                self.projectiles.append(projectile)
+        if keys[pygame.K_r]:
+            self.player.reload()
+
+        # Update all projectiles
+        for projectile in self.projectiles[:]:  # Iterate over copy
+            projectile.update(delta_time)
+            if not projectile.is_alive():
+                self.projectiles.remove(projectile)
+
         # Update all zombies
         for zombie in self.zombies:
             zombie.update(delta_time, self.player.x, self.player.y)
+
+        # Check projectile-zombie collisions
+        for projectile in self.projectiles[:]:  # Iterate over copy
+            if not projectile.is_alive():
+                continue
+
+            for zombie in self.zombies[:]:  # Iterate over copy
+                if projectile.check_collision(zombie.x, zombie.y, zombie.radius):
+                    # Projectile hit zombie - kill zombie and award points
+                    self.score += self.score_config.points_per_kill
+                    projectile.mark_for_removal()
+
+                    # Add visual effects
+                    self.kill_flashes.append(
+                        KillFlash(
+                            x=zombie.x,
+                            y=zombie.y,
+                            radius=zombie.radius,
+                            timer=self.ui_config.kill_flash_duration,
+                        )
+                    )
+                    self.damage_popups.append(
+                        DamagePopup(
+                            x=zombie.x,
+                            y=zombie.y - 20,
+                            text=f"+{self.score_config.points_per_kill}",
+                            timer=self.ui_config.damage_popup_duration,
+                        )
+                    )
+
+                    # Spawn power-up with drop_chance
+                    if random.random() < self.powerup_config.drop_chance:
+                        self.powerups.append(Powerup(zombie.x, zombie.y))
+
+                    # Remove zombie
+                    self.zombies.remove(zombie)
+                    break  # Projectile can only hit one zombie
 
         # Check player attacks
         if self.player.is_attacking:
@@ -409,6 +464,10 @@ class Game:
         for powerup in self.powerups:
             powerup.draw(self.screen)
 
+        # Render all projectiles
+        for projectile in self.projectiles:
+            projectile.render(self.screen)
+
         # Render kill flash effects (on top of zombies)
         self.render_kill_flashes()
 
@@ -433,6 +492,7 @@ class Game:
         # Render UI
         self.render_health_bar()
         self.render_score()
+        self.render_ammo()
         self.render_wave_notification()
 
         # Update display
@@ -485,6 +545,27 @@ class Game:
         score_y = int(self.SCREEN_HEIGHT * self.score_config.score_y_ratio)
 
         self.screen.blit(score_text, (score_x, score_y))
+
+    def render_ammo(self):
+        """Draw the current ammo count below the score."""
+        # Color ammo text based on ammo level
+        if self.player.ammo == 0:
+            ammo_color = (255, 0, 0)  # Red when empty
+        elif self.player.ammo <= self.player.max_ammo * 0.3:
+            ammo_color = (255, 165, 0)  # Orange when low
+        else:
+            ammo_color = self.ui_config.text_color  # White when normal
+
+        ammo_text = self.font.render(
+            f"Ammo: {self.player.ammo}/{self.player.max_ammo}", True, ammo_color
+        )
+
+        # Right-align below score (same X position, Y offset)
+        text_rect = ammo_text.get_rect()
+        ammo_x = int(self.SCREEN_WIDTH * self.score_config.score_x_ratio) - text_rect.width
+        ammo_y = int(self.SCREEN_HEIGHT * self.score_config.score_y_ratio) + 40
+
+        self.screen.blit(ammo_text, (ammo_x, ammo_y))
 
     def render_wave_notification(self):
         """Show 'Wave X' notification at start of each wave."""

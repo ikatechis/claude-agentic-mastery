@@ -1,5 +1,6 @@
 """Power-up collectibles that enhance player abilities."""
 
+import math
 import random
 from enum import Enum, auto
 
@@ -18,6 +19,7 @@ class PowerupType(Enum):
     HEALTH = auto()  # Restores player health
     SPEED = auto()  # Temporarily increases movement speed
     SHIELD = auto()  # Blocks incoming damage
+    AMMO = auto()  # Restores ammunition
 
 
 class Powerup:
@@ -39,8 +41,14 @@ class Powerup:
         self.y = y
         self.radius = self.config.radius
 
-        # Determine type (random if not specified)
-        self.powerup_type = powerup_type or random.choice(list(PowerupType))
+        # Determine type (weighted random if not specified)
+        if powerup_type:
+            self.powerup_type = powerup_type
+        else:
+            # Use weighted random selection (AMMO is 3x more likely)
+            types = list(PowerupType)
+            weights = [self.config.powerup_weights[t.name] for t in types]
+            self.powerup_type = random.choices(types, weights=weights)[0]
 
         # Visual properties based on type
         self.color = self._get_color()
@@ -49,6 +57,13 @@ class Powerup:
         sprite_size = self.radius * 2
         sprite_path = self._get_sprite_path()
         self.sprite_image = load_sprite(sprite_path, sprite_size)
+
+        # Animation state
+        self.rotation_angle = 0.0  # Current rotation angle (degrees)
+        self.bob_timer = 0.0  # Timer for bobbing animation
+        self.original_sprite = None  # Store unrotated sprite
+        if self.sprite_image:
+            self.original_sprite = self.sprite_image.copy()
 
         # Lifetime management
         self.lifetime = self.config.lifetime
@@ -65,8 +80,10 @@ class Powerup:
             return self.config.health_color
         elif self.powerup_type == PowerupType.SPEED:
             return self.config.speed_color
-        else:  # SHIELD
+        elif self.powerup_type == PowerupType.SHIELD:
             return self.config.shield_color
+        else:  # AMMO
+            return self.config.ammo_color
 
     def _get_sprite_path(self) -> str:
         """Get the sprite path for this power-up type."""
@@ -75,8 +92,10 @@ class Powerup:
             return "assets/sprites/powerup_health.png"  # Green health potion
         elif self.powerup_type == PowerupType.SPEED:
             return "assets/sprites/powerup_speed.png"  # Cyan lightning bolt
-        else:  # SHIELD
+        elif self.powerup_type == PowerupType.SHIELD:
             return "assets/sprites/powerup_shield.png"  # Golden shield
+        else:  # AMMO
+            return "assets/sprites/powerup_ammo.png"  # Orange ammo box
 
     def update(self, delta_time: float) -> bool:
         """Update power-up state (lifetime countdown, blink animation).
@@ -95,6 +114,13 @@ class Powerup:
             logger.debug(f"Powerup expired: {self.powerup_type.name}")
             return False
 
+        # Animate rotation (spin continuously)
+        self.rotation_angle += self.config.rotation_speed * delta_time
+        self.rotation_angle = self.rotation_angle % 360  # Keep 0-360
+
+        # Animate bobbing (up/down movement)
+        self.bob_timer += delta_time
+
         # Handle blink warning in final seconds
         if self.lifetime <= self.config.warning_duration:
             self.blink_timer += delta_time
@@ -107,7 +133,7 @@ class Powerup:
         return True
 
     def draw(self, screen: pygame.Surface) -> None:
-        """Draw the power-up (skip if in blink-off state).
+        """Draw the power-up with rotation and bobbing animation.
 
         Args:
             screen: Pygame surface to draw on
@@ -116,12 +142,26 @@ class Powerup:
         if not self.is_visible:
             return
 
+        # Calculate bobbing offset (vertical movement using sin wave)
+        bob_offset = (
+            math.sin(self.bob_timer * self.config.bob_speed * 2 * math.pi) * self.config.bob_height
+        )
+
         # Draw sprite or fallback to colored circle
-        if self.sprite_image:
-            rect = self.sprite_image.get_rect(center=(int(self.x), int(self.y)))
+        if self.original_sprite:
+            # Rotate sprite and apply bobbing
+            rotated = pygame.transform.rotate(self.original_sprite, self.rotation_angle)
+            rect = rotated.get_rect(center=(int(self.x), int(self.y + bob_offset)))
+            screen.blit(rotated, rect)
+        elif self.sprite_image:
+            # Fallback without rotation (but with bobbing)
+            rect = self.sprite_image.get_rect(center=(int(self.x), int(self.y + bob_offset)))
             screen.blit(self.sprite_image, rect)
         else:
-            pygame.draw.circle(screen, self.color, (int(self.x), int(self.y)), self.radius)
+            # Circle fallback with bobbing
+            pygame.draw.circle(
+                screen, self.color, (int(self.x), int(self.y + bob_offset)), self.radius
+            )
 
     def apply_effect(self, player) -> dict:
         """Apply this power-up's effect to the player.
@@ -155,9 +195,21 @@ class Powerup:
             logger.debug(f"Powerup collected: SPEED {duration:.1f}s")
             return {"type": "speed", "duration": duration, "color": self.color}
 
-        else:  # SHIELD
+        elif self.powerup_type == PowerupType.SHIELD:
             # Add shield hits
             player.apply_shield(self.config.shield_hits)
 
             logger.debug(f"Powerup collected: SHIELD {self.config.shield_hits} hits")
             return {"type": "shield", "hits": self.config.shield_hits, "color": self.color}
+
+        else:  # AMMO
+            # Restore random amount of ammunition to stash (reserve)
+            restore_amount = random.randint(
+                self.config.ammo_restore_min, self.config.ammo_restore_max
+            )
+            old_stash = player.stash
+            player.stash = min(player.max_stash, player.stash + restore_amount)
+            actual_restored = player.stash - old_stash
+
+            logger.debug(f"Powerup collected: AMMO restored {actual_restored} rounds to stash")
+            return {"type": "ammo", "amount": actual_restored, "color": self.color}

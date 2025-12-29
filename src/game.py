@@ -23,8 +23,11 @@ from config import (
 from entities.player import Player
 from entities.powerup import Powerup
 from entities.zombie import Zombie
+from entities.zombie_fast import FastZombie
+from entities.zombie_tank import TankZombie
 from game_state import GameState
 from logger import get_logger
+from sound import init_sounds, play_sound
 
 logger = get_logger(__name__)
 
@@ -38,6 +41,7 @@ class Game:
     def __init__(self):
         """Initialize the game"""
         pygame.init()
+        init_sounds()
 
         # Game configuration
         self.config = game_config
@@ -90,6 +94,9 @@ class Game:
 
         # Power-up management
         self.powerups = []
+
+        # Projectile management
+        self.projectiles = []
 
         # Visual effects
         self.damage_popups = []  # List of DamagePopup dataclasses
@@ -168,7 +175,13 @@ class Game:
         return distance < (entity1.radius + entity2.radius)
 
     def spawn_zombie(self):
-        """Spawn a zombie at a random position off-screen."""
+        """Spawn a zombie variant at a random position off-screen.
+
+        Probabilities:
+        - 70% Normal zombie
+        - 20% Fast zombie (quick but fragile)
+        - 10% Tank zombie (slow but tough)
+        """
         buffer = self.config.spawn_offscreen_buffer
         side = random.choice(("top", "bottom", "left", "right"))
 
@@ -185,7 +198,13 @@ class Game:
             x = self.SCREEN_WIDTH + buffer
             y = random.randint(0, self.SCREEN_HEIGHT)
 
-        self.zombies.append(Zombie(x, y))
+        # Choose zombie type with weighted probabilities (using random.choices)
+        zombie_types = [Zombie, FastZombie, TankZombie]
+        spawn_weights = [0.70, 0.20, 0.10]  # 70% normal, 20% fast, 10% tank
+        chosen_zombie_class = random.choices(zombie_types, weights=spawn_weights, k=1)[0]
+        zombie = chosen_zombie_class(x, y)
+
+        self.zombies.append(zombie)
 
     def calculate_wave_zombies(self, wave_number):
         """Calculate how many zombies to spawn for a given wave.
@@ -207,6 +226,7 @@ class Game:
         self.zombies_to_spawn = self.calculate_wave_zombies(self.current_wave)
         self.spawn_timer = 0.0
         self.wave_notification_timer = self.ui_config.wave_notification_duration
+        play_sound("wave_start")
 
     def start_new_game(self):
         """Reset game state for a new game."""
@@ -255,6 +275,7 @@ class Game:
         # Check if wave complete (only if not already in delay)
         if self.wave_delay_timer <= 0 and len(self.zombies) == 0 and self.zombies_to_spawn == 0:
             self.wave_delay_timer = self.wave_config.wave_delay
+            play_sound("wave_complete")
 
         # Update wave notification timer
         if self.wave_notification_timer > 0:
@@ -263,42 +284,125 @@ class Game:
         # Update player
         self.player.update(delta_time)
 
+        # Handle shooting (F key) and reload (R key)
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_f]:
+            projectile = self.player.fire()
+            if projectile:
+                self.projectiles.append(projectile)
+                play_sound("fire")
+        if keys[pygame.K_r]:
+            self.player.reload()
+
+        # Update all projectiles
+        for projectile in self.projectiles[:]:  # Iterate over copy
+            projectile.update(delta_time)
+            if not projectile.is_alive():
+                self.projectiles.remove(projectile)
+
         # Update all zombies
         for zombie in self.zombies:
             zombie.update(delta_time, self.player.x, self.player.y)
 
+        # Check projectile-zombie collisions
+        for projectile in self.projectiles[:]:  # Iterate over copy
+            if not projectile.is_alive():
+                continue
+
+            for zombie in self.zombies[:]:  # Iterate over copy
+                if projectile.check_collision(zombie.x, zombie.y, zombie.radius):
+                    # Projectile hit zombie - deal damage
+                    projectile.mark_for_removal()
+                    zombie_died = False
+
+                    # Check if zombie has health (variant) or dies instantly (normal)
+                    if hasattr(zombie, "take_damage"):
+                        # Zombie variant with health - call take_damage()
+                        zombie_died = not zombie.take_damage(projectile.config.damage)
+                    else:
+                        # Normal zombie - dies in one hit
+                        zombie_died = True
+
+                    # Only award points and spawn effects if zombie died
+                    if zombie_died:
+                        self.score += self.score_config.points_per_kill
+                        play_sound("zombie_death")
+
+                        # Add visual effects
+                        self.kill_flashes.append(
+                            KillFlash(
+                                x=zombie.x,
+                                y=zombie.y,
+                                radius=zombie.radius,
+                                timer=self.ui_config.kill_flash_duration,
+                            )
+                        )
+                        self.damage_popups.append(
+                            DamagePopup(
+                                x=zombie.x,
+                                y=zombie.y - 20,
+                                text=f"+{self.score_config.points_per_kill}",
+                                timer=self.ui_config.damage_popup_duration,
+                            )
+                        )
+
+                        # Spawn power-up with drop_chance
+                        if random.random() < self.powerup_config.drop_chance:
+                            self.powerups.append(Powerup(zombie.x, zombie.y))
+
+                        # Remove zombie
+                        self.zombies.remove(zombie)
+
+                    break  # Projectile can only hit one zombie
+
         # Check player attacks
         if self.player.is_attacking:
-            # Kill zombies within attack range
+            # Attack zombies within range - deal damage
             survivors = []
             for zombie in self.zombies:
                 if self.get_distance(self.player, zombie) <= self.player.attack_range:
-                    # Zombie killed - award points
-                    self.score += self.score_config.points_per_kill
+                    # Zombie hit by melee attack
+                    zombie_died = False
 
-                    # Add visual effects
-                    # Flash effect at zombie position
-                    self.kill_flashes.append(
-                        KillFlash(
-                            x=zombie.x,
-                            y=zombie.y,
-                            radius=zombie.radius,
-                            timer=self.ui_config.kill_flash_duration,
-                        )
-                    )
-                    # Damage popup above zombie
-                    self.damage_popups.append(
-                        DamagePopup(
-                            x=zombie.x,
-                            y=zombie.y - 20,
-                            text=f"+{self.score_config.points_per_kill}",
-                            timer=self.ui_config.damage_popup_duration,
-                        )
-                    )
+                    # Check if zombie has health (variant) or dies instantly (normal)
+                    if hasattr(zombie, "take_damage"):
+                        # Zombie variant with health - call take_damage()
+                        # Melee does 10 damage (same as projectile)
+                        zombie_died = not zombie.take_damage(10)
+                    else:
+                        # Normal zombie - dies in one hit
+                        zombie_died = True
 
-                    # Spawn power-up with drop_chance probability
-                    if random.random() < self.powerup_config.drop_chance:
-                        self.powerups.append(Powerup(zombie.x, zombie.y))
+                    # Only award points and spawn effects if zombie died
+                    if zombie_died:
+                        self.score += self.score_config.points_per_kill
+                        play_sound("zombie_death")
+
+                        # Add visual effects
+                        self.kill_flashes.append(
+                            KillFlash(
+                                x=zombie.x,
+                                y=zombie.y,
+                                radius=zombie.radius,
+                                timer=self.ui_config.kill_flash_duration,
+                            )
+                        )
+                        self.damage_popups.append(
+                            DamagePopup(
+                                x=zombie.x,
+                                y=zombie.y - 20,
+                                text=f"+{self.score_config.points_per_kill}",
+                                timer=self.ui_config.damage_popup_duration,
+                            )
+                        )
+
+                        # Spawn power-up with drop_chance probability
+                        if random.random() < self.powerup_config.drop_chance:
+                            self.powerups.append(Powerup(zombie.x, zombie.y))
+                        # Zombie died - don't add to survivors
+                    else:
+                        # Zombie survived hit - keep it
+                        survivors.append(zombie)
                 else:
                     survivors.append(zombie)
             self.zombies = survivors
@@ -332,6 +436,7 @@ class Game:
                 if self.score > self.high_score:
                     self.high_score = self.score
                     self.save_high_score()  # Persist to file immediately
+                play_sound("game_over")
                 self.state = GameState.GAME_OVER
                 return
 
@@ -366,6 +471,7 @@ class Game:
             if self.check_collision(self.player, powerup):
                 # Apply power-up effect
                 effect_data = powerup.apply_effect(self.player)
+                play_sound("powerup_collect")
 
                 # Create pickup flash visual effect
                 self.pickup_flashes.append(
@@ -409,6 +515,10 @@ class Game:
         for powerup in self.powerups:
             powerup.draw(self.screen)
 
+        # Render all projectiles
+        for projectile in self.projectiles:
+            projectile.render(self.screen)
+
         # Render kill flash effects (on top of zombies)
         self.render_kill_flashes()
 
@@ -433,6 +543,7 @@ class Game:
         # Render UI
         self.render_health_bar()
         self.render_score()
+        self.render_ammo()
         self.render_wave_notification()
 
         # Update display
@@ -485,6 +596,32 @@ class Game:
         score_y = int(self.SCREEN_HEIGHT * self.score_config.score_y_ratio)
 
         self.screen.blit(score_text, (score_x, score_y))
+
+    def render_ammo(self):
+        """Draw the magazine and stash ammo counts below the score."""
+        # Show reloading status if active
+        if self.player.is_reloading:
+            ammo_text = self.font.render("RELOADING...", True, (255, 255, 0))
+        else:
+            # Color text based on magazine level
+            if self.player.magazine == 0:
+                ammo_color = (255, 0, 0)  # Red when empty
+            elif self.player.magazine <= 2:
+                ammo_color = (255, 165, 0)  # Orange when low
+            else:
+                ammo_color = self.ui_config.text_color  # White when normal
+
+            # Format: "MAG: 6 | STASH: 18"
+            ammo_text = self.font.render(
+                f"MAG: {self.player.magazine} | STASH: {self.player.stash}", True, ammo_color
+            )
+
+        # Right-align below score (same X position, Y offset)
+        text_rect = ammo_text.get_rect()
+        ammo_x = int(self.SCREEN_WIDTH * self.score_config.score_x_ratio) - text_rect.width
+        ammo_y = int(self.SCREEN_HEIGHT * self.score_config.score_y_ratio) + 40
+
+        self.screen.blit(ammo_text, (ammo_x, ammo_y))
 
     def render_wave_notification(self):
         """Show 'Wave X' notification at start of each wave."""

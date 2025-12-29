@@ -49,7 +49,12 @@ class TestPowerupCreation:
         """Test creating power-up with random type (no type specified)"""
         pygame.init()
         powerup = Powerup(100, 100)  # No type specified
-        assert powerup.powerup_type in [PowerupType.HEALTH, PowerupType.SPEED, PowerupType.SHIELD]
+        assert powerup.powerup_type in [
+            PowerupType.HEALTH,
+            PowerupType.SPEED,
+            PowerupType.SHIELD,
+            PowerupType.AMMO,
+        ]
         pygame.quit()
 
     def test_initial_state(self, powerup):

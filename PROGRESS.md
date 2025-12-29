@@ -677,377 +677,882 @@
 
 ---
 
-## Session 4: Power-Up System & Multi-Agent Workflow ✅ COMPLETE
+## Session 5: Ranged Combat & Agentic Tools ✅ COMPLETE
 
-**Date:** December 27, 2024
-**Duration:** ~3 hours
-**Git Commits:** cdff27c (power-up system), ae59821 (power-up sprites)
-**Branch:** feat/logging-system (not yet merged)
+**Date:** December 29, 2024
+**Duration:** ~4 hours
+**Git Commit:** 62d7175 - feat: add ranged combat system with agentic tools (Session 5)
 
 ### What We Built
 
-#### Power-Up System (src/entities/powerup.py, src/config.py) ✅
-- ✅ **Three Power-Up Types**
-  - Health Pack: Restores 30-50 HP (green)
-  - Speed Boost: 1.5x speed for 5-10 seconds (cyan)
-  - Shield: Blocks 3 hits (gold)
-- ✅ **PowerupConfig Dataclass**
-  - 27 configuration parameters
-  - Drop chance, lifetime, colors, effect values
-  - Centralized tuning for game balance
-- ✅ **Enum-Based Type System**
-  - `PowerupType.HEALTH`, `.SPEED`, `.SHIELD`
-  - Type-safe alternative to magic strings
-  - Easy to extend with new types
-- ✅ **Lifetime Management**
-  - 10-second despawn timer
-  - 2-second blink warning (toggles visibility)
-  - Auto-cleanup when expired
+#### Agentic Tools (Phase 3 Learning) ✅
+- ✅ **pygame-patterns Skill** (`.claude/skills/pygame-patterns/`)
+  - SKILL.md with pattern documentation and best practices
+  - patterns/projectiles.md with verified pygame projectile patterns
+  - Codifies angle-to-velocity conversion (handles pygame Y-axis inversion)
+  - Frame-independent movement patterns with delta_time
+  - Circle collision detection patterns
+  - Projectile lifetime management
+- ✅ **entity-builder Subagent** (`.claude/agents/entity-builder.md`)
+  - Auto-generates pygame entities following project patterns
+  - Analyzes existing entities (player.py, zombie.py, powerup.py)
+  - Creates config dataclasses, sprite loading, logging integration
+  - Generates update(), render(), and collision methods
+  - Integration with python-testing skill for test generation
+  - **Successfully used to generate Projectile entity!**
 
-#### Player Integration (src/entities/player.py) ✅
-- ✅ **Timed Effect System**
-  - Speed boost: countdown timer, auto-expires
-  - `speed_multiplier` applied to movement
-  - Consistent with existing cooldown pattern
-- ✅ **Shield Hit Counter**
-  - `shield_hits_remaining` integer counter
-  - Blocks damage in `take_damage()` method
-  - Consumes damage cooldown (prevents instant depletion)
-- ✅ **Effect Methods**
-  - `apply_speed_boost(multiplier, duration)`
-  - `apply_shield(hits)`
-  - `has_shield()`, `has_speed_boost()` queries
+#### Ranged Combat System ✅
+- ✅ **Projectile Entity** (src/entities/projectile.py)
+  - Generated using entity-builder subagent
+  - Spawns at player position with facing direction
+  - Velocity-based movement (500 px/sec)
+  - Circle collision with zombies
+  - Lifetime tracking (2 sec despawn)
+  - Config-driven (ProjectileConfig)
+  - Yellow circle rendering (sprite fallback ready)
+- ✅ **Weapon System** (src/entities/player.py)
+  - Ammo tracking from WeaponConfig (30 max ammo)
+  - fire() method creates projectile in facing direction
+  - reload() method (instant for now)
+  - Fire cooldown (0.3 sec between shots)
+  - Uses existing player.angle for projectile direction
+  - No hardcoded values - all from config
+- ✅ **Game Integration** (src/game.py)
+  - F key fires projectile in facing direction
+  - R key reloads ammo
+  - Projectile-zombie collision detection
+  - Kill zombies on hit, award points, spawn power-ups
+  - Visual effects (kill flashes, damage popups)
+  - Projectile list management with safe removal
+- ✅ **Ammo UI Display**
+  - Right-aligned below score
+  - Color-coded: Red (empty), Orange (low <30%), White (normal)
+  - Shows current/max ammo (e.g., "Ammo: 25/30")
 
-#### Game Loop Integration (src/game.py) ✅
-- ✅ **Spawning System**
-  - 20% drop chance on zombie kill
-  - Spawns at zombie death position
-  - Random type selection
-- ✅ **Collection System**
-  - Circle collision detection with player
-  - Effect application + pickup flash creation
-  - Collect-then-remove pattern (no mid-iteration removal)
-- ✅ **Update Loop**
-  - Powerup lifetime countdown
-  - Blink animation during warning phase
-  - List comprehension filtering for expired powerups
-
-#### Visual Effects (src/game.py) ✅
-- ✅ **Pickup Flash**
-  - Colored circle at collection point
-  - Color matches power-up type
-  - Fades over 0.15 seconds
-- ✅ **Active Effect Indicators**
-  - Shield: Gold circle around player + hit counter text
-  - Speed Boost: Cyan progress bar above player
-- ✅ **Rendering Order**
-  - Background → Zombies → Powerups → Flashes → Player → Effects → UI
-
-#### Testing & Quality (tests/test_powerup.py, tests/test_game.py) ✅
-- ✅ **19 Unit Tests** (test_powerup.py)
-  - Creation, lifetime, blink animation, effects
-  - 97% coverage for powerup.py
-- ✅ **5 Integration Tests** (test_game.py)
-  - Initialization, collection, expiration, visual effects
-- ✅ **Coverage: 69%** (up from 53%)
-  - config.py: 100%, utils.py: 100%
-  - player.py: 66%, powerup.py: 97%
-  - 52 tests passing (all green)
+#### Configuration (src/config.py) ✅
+- ✅ **ProjectileConfig**
+  - speed: 500.0 px/sec
+  - radius: 4 (collision)
+  - lifetime: 2.0 sec
+  - damage: 10
+  - color: yellow (255, 255, 0)
+  - sprite_path: "assets/sprites/projectile.png"
+- ✅ **WeaponConfig**
+  - max_ammo: 30
+  - fire_rate: 0.3 sec
+  - reload_time: 0.0 (instant)
 
 ### Concepts Learned
 
-#### Multi-Agent Workflow (Plan Mode)
-- **Plan Mode workflow**
-  - Read-only exploration before implementation
-  - Multi-agent parallelization
-  - Synthesized findings into comprehensive plan
-- **Explore Agents (3 parallel)**
-  - Agent 1: Entity patterns (Player/Zombie structure)
-  - Agent 2: Collision detection system
-  - Agent 3: Visual effects implementation
-  - Each agent researched different aspect simultaneously
-- **Plan Agent (architecture design)**
-  - Synthesized findings from 3 Explore agents
-  - Created 5-phase implementation plan
-  - Identified critical files and architectural decisions
-- **User approval workflow**
-  - AskUserQuestion for preferences (types, spawning, despawn)
-  - ExitPlanMode to present plan
-  - Begin implementation after approval
-
-#### Implementation Patterns
-- **Incremental Development**
-  - Phase 1: Foundation (config + entity class)
-  - Phase 2: Player Integration (timed effects)
-  - Phase 3: Game Loop Integration (spawning + collection)
-  - Phase 4: Visual Effects (rendering + indicators)
-  - Phase 5: Testing & Polish
-  - Each phase testable independently
-- **List Comprehension Lifecycle**
-  - `update()` returns False when expired
-  - Filter with list comprehension: `[p for p in powerups if p.update(dt)]`
-  - Auto-cleanup pattern
-- **Collect-Then-Remove Pattern**
-  - Can't modify list during iteration (RuntimeError)
-  - Collect items to remove in separate list
-  - Filter after iteration completes
-- **Effect Data Dictionary**
-  - `apply_effect()` returns `{"type": "health", "amount": 40, "color": (0,255,0)}`
-  - Game loop uses data for visual feedback
-  - Flexible, extensible pattern
+#### Agentic Tools Mastery
+- **Custom Skill Creation**
+  - YAML frontmatter (name, description, allowed-tools)
+  - Pattern documentation for reusability
+  - Integration with other skills
+  - Following project conventions
+- **Custom Subagent Creation**
+  - Markdown-based agent instructions
+  - Defining capabilities and inputs/outputs
+  - Pattern analysis workflows
+  - Code generation guidelines
+- **Subagent Invocation**
+  - Using Task tool with subagent_type='general-purpose'
+  - Providing comprehensive prompts with context
+  - Receiving and reviewing generated code
+  - Understanding agent vs direct coding trade-offs
 
 #### Game Design Decisions
-- **Shield + Cooldown Interaction**
-  - Shield blocks damage but consumes cooldown
-  - Prevents instant 3-hit depletion from zombie horde
-  - Creates tactical retreat gameplay
-- **Speed Boost Stacking**
-  - Refreshes timer, doesn't multiply multiplier
-  - 1.5x stays 1.5x (no exponential stacking)
-  - Balanced, predictable behavior
-- **Health Capping**
-  - `apply_effect()` returns actual amount restored
-  - Prevents over-healing beyond max HP
-  - Used for accurate damage popups
+- **No Mouse Aiming**
+  - Shoot in facing direction (WASD controls rotation)
+  - Cleaner than dual-control scheme (WASD + mouse)
+  - Consistent with top-down movement style
+  - User-driven decision through AskUserQuestion
+- **Dual Combat System**
+  - SPACE: Melee attack (close range, no ammo)
+  - F: Ranged attack (distance, limited ammo)
+  - R: Reload (resource management)
+  - Strategic choice between combat types
+
+#### Projectile Physics
+- **Angle to Velocity Conversion**
+  - `angle_rad = math.radians(player.angle)`
+  - `velocity_x = math.cos(angle_rad) * speed`
+  - `velocity_y = -math.sin(angle_rad) * speed` (negative for pygame Y-axis!)
+  - 0° = right, 90° = up, 180° = left, 270° = down
+- **Frame-Independent Movement**
+  - `position += velocity * delta_time`
+  - Consistent speed across framerates
+  - Critical for projectile accuracy
 
 ### Verification Discipline
 
 **APIs Verified This Session:**
-- Python Enum with `auto()` for type-safe enumerations
-- `random.choice(list)` for random selection
-- `random.randint(min, max)` and `random.uniform(min, max)` for ranges
-- List comprehension filtering patterns
-- Dataclass field types and `dataclasses.replace()`
+- `math.cos()` and `math.sin()` for angle-to-velocity conversion
+- `math.radians()` for degree-to-radian conversion
+- pygame Y-axis inversion handling
+- Projectile-zombie collision using existing circle collision pattern
+
+**Pattern Analysis:**
+- Explored player.py rotation system (found `player.angle` attribute)
+- Used Explore subagent to understand facing direction implementation
+- Referenced existing entity patterns for consistency
 
 **Best Practices Applied:**
-- Enum-based type system (not magic strings)
-- Dataclass configuration (type-safe, organized)
-- DRY principle (single `load_sprite` utility)
-- Test-driven development (tests guide implementation)
-- Multi-agent planning (understand before coding)
+- Config-driven projectile and weapon settings
+- No hardcoded magic numbers
+- Logging for projectile lifecycle events
+- Frame-independent physics
+- Safe list iteration for removal (iterate over copy)
 
 ### Key Lessons
 
-1. **Plan Mode is powerful for complex features**
-   - 3 parallel Explore agents researched in minutes
-   - Plan agent synthesized into comprehensive architecture
-   - Zero wasted effort, no refactoring needed
-   - Code worked first try
+1. **Agentic tools amplify productivity**
+   - entity-builder subagent generated complete Projectile class
+   - pygame-patterns skill documents patterns for future use
+   - One-time setup, reusable across features
+   - Educational value: shows proper patterns
 
-2. **Incremental implementation reduces risk**
-   - 5 phases with clear boundaries
-   - Each phase testable independently
-   - Tests caught issues early
-   - Coverage increased 16% (53% → 69%)
+2. **Plan mode prevents rework**
+   - User caught mouse aiming issue during planning
+   - Pivot to F key shooting was smooth
+   - AskUserQuestion tool enabled collaboration
+   - Better than building wrong feature
 
-3. **Effect data dictionaries enable flexibility**
-   - Single `apply_effect()` method for all types
-   - Returns data for visual feedback
-   - Easy to add new effect types
-   - Decouples effect logic from rendering
+3. **Config centralization scales**
+   - ProjectileConfig and WeaponConfig keep values tunable
+   - Easy to balance gameplay (adjust ammo, fire rate, etc.)
+   - No code changes needed for balance tweaks
+   - Professional game development practice
 
-4. **Cooldown sharing prevents exploits**
-   - Shield + damage cooldown interaction
-   - Creates counterplay mechanics
-   - Prevents instant shield depletion
-   - More engaging gameplay
+4. **User input drives design**
+   - Mouse aiming → Rejected (conflicts with WASD)
+   - F key → Approved (keeps melee on SPACE)
+   - User knows their game feel preferences
+   - Collaboration > assumptions
 
-5. **Type safety catches bugs early**
-   - Enum prevents typos (`PowerupType.HEALTH` vs `"helth"`)
-   - Dataclasses provide IDE autocomplete
-   - mypy catches type mismatches
-   - Fewer runtime errors
+5. **Subagents vs direct coding**
+   - Subagents: Thorough, pattern-following, educational
+   - Direct: Faster, good for simple cases
+   - Choice depends on complexity and learning goals
+   - Both have their place in workflow
 
 ### Statistics
 
-- **Files Created:** 2 (powerup.py, test_powerup.py)
-- **Files Modified:** 4 (config.py, player.py, game.py, test_game.py)
-- **Lines Added:** ~400 (code + tests)
-- **Tests:** 52 passing (19 powerup + 5 integration + 28 existing)
-- **Coverage:** 69% (up from 53%, +16%)
-- **Agents Used:** 4 (3 Explore + 1 Plan)
-- **Phases:** 5 (Foundation, Player, Game Loop, Visual, Testing)
-- **All quality checks:** ✅ PASSING (ruff, mypy, pytest)
+- **Files Created:** 4 (pygame-patterns skill, entity-builder subagent, projectile.py, patterns/projectiles.md)
+- **Files Modified:** 3 (config.py, player.py, game.py)
+- **Lines Added:** ~1,100 (skill docs, subagent, projectile, weapon system, integration)
+- **Agentic Tools Created:** 2 (first custom skill + subagent!)
+- **Entities Generated by Subagent:** 1 (Projectile)
+- **Config Dataclasses Added:** 2 (ProjectileConfig, WeaponConfig)
+- **New Controls:** 2 (F to fire, R to reload)
+- **All quality checks:** ✅ PASSING (ruff, mypy, pytest, pre-commit)
 
-### Session 4 Final Status
+### Session 5 Final Status
 
 **Completion:** 100% ✅
 **All Features Working:**
-1. ✅ Three power-up types with distinct effects
-2. ✅ 20% drop rate from zombie kills
-3. ✅ 10-second lifetime with blink warning
-4. ✅ Timed effects (speed boost)
-5. ✅ Hit counter effects (shield)
-6. ✅ Visual indicators for active effects
-7. ✅ Comprehensive test suite (52 tests, 69% coverage)
-8. ✅ Multi-agent workflow demonstration
-
-**Known Issues:**
-- Power-ups use colored circles (no distinct sprites yet)
-- Active effect indicators could be more polished with icons
+1. ✅ pygame-patterns skill created and documented
+2. ✅ entity-builder subagent created and functional
+3. ✅ Projectile entity generated using subagent
+4. ✅ F key fires projectile in facing direction
+5. ✅ Projectiles kill zombies on hit
+6. ✅ Ammo decreases when firing
+7. ✅ R key reloads ammo
+8. ✅ Ammo UI displayed (color-coded)
+9. ✅ Both melee (SPACE) and ranged (F) combat work together
 
 ---
 
-## Session 4.5: Comprehensive Logging System ✅ COMPLETE
+## Session 6: AMMO Power-ups & Zombie Variants ✅ COMPLETE
 
-**Date:** December 28, 2024
-**Duration:** ~1.5 hours
-**Git Commits:** c06766d (logging system), 2cdab5d (logging docs)
-**Branch:** feat/logging-system (current)
+**Date:** December 29, 2024
+**Duration:** ~2 hours
+**Git Commit:** TBD - Ready for commit
 
 ### What We Built
 
-#### Logging Infrastructure (src/logger.py, src/main.py) ✅
-- ✅ **Dual-Handler Logging System**
-  - Console handler: WARNING+ (default) or DEBUG+ (GAME_DEBUG=1)
-  - File handler: DEBUG+ (always) for full playtest archiving
-  - Timestamped log files: `logs/game_YYYY-MM-DD_HHMMSS.log`
-  - Centralized `get_logger(__name__)` pattern across all modules
-- ✅ **Environment Variable Control**
-  - `GAME_DEBUG=1` environment flag enables verbose console output
-  - Normal mode: quiet console, full file logs
-  - Debug mode: verbose console + full file logs
-- ✅ **Log File Management**
-  - Automatic timestamping for playtest session archiving
-  - Logs directory excluded from git (in .gitignore)
-  - Each run creates new log file (no overwriting)
+#### AMMO Power-Up System ✅
+- ✅ **PowerupType.AMMO enum** - New power-up type for ammunition
+- ✅ **AMMO configuration** (config.py)
+  - ammo_color: Orange (255, 165, 0)
+  - ammo_restore_min: 10 rounds
+  - ammo_restore_max: 20 rounds
+- ✅ **Powerup.py integration**
+  - _get_color() handles AMMO
+  - _get_sprite_path() points to powerup_ammo.png
+  - apply_effect() restores player ammo
+- ✅ **Kenney asset integration**
+  - Found things_bronze.png (orange bullets) in Space Shooter Redux
+  - Copied to assets/sprites/powerup_ammo.png
+  - Perfect match for ammo power-up
 
-#### Module Integration ✅
-- ✅ **Replaced Silent Error Suppression**
-  - Removed all `contextlib.suppress` usage
-  - Added try/except blocks with proper logging
-  - All errors now tracked and discoverable
-  - Graceful degradation with logged warnings
-- ✅ **Entity Event Logging**
-  - Player: damage events, attack actions, power-up collection
-  - Zombie: spawn events, death events
-  - Power-ups: spawn, collection, expiration
-  - Game: wave progression, state changes, high score updates
+#### Zombie Variant System ✅
+- ✅ **Fast Zombie** (zombie_fast.py)
+  - Speed: 140 px/sec (2x normal)
+  - Health: 5 HP (dies in 1 hit from 10 damage)
+  - Radius: 10 (smaller)
+  - Rotation: 720°/sec (faster than normal)
+  - Color: Greenish (150, 200, 100)
+  - Sprite: assets/sprites/zombie_fast.png (Kenney Zombie 1)
+- ✅ **Tank Zombie** (zombie_tank.py)
+  - Speed: 40 px/sec (slower than normal)
+  - Health: 30 HP (takes 3 hits to kill)
+  - Radius: 16 (larger)
+  - Rotation: 360°/sec (slower than normal)
+  - Damage: 15 (more than normal)
+  - Color: Dark green (100, 150, 80)
+  - Sprite: assets/sprites/zombie_tank.png (Kenney Zombie 2)
+- ✅ **Spawn probabilities** (game.py:spawn_zombie)
+  - 70% Normal zombies
+  - 20% Fast zombies
+  - 10% Tank zombies
+- ✅ **Health system**
+  - Added take_damage() method to zombie variants
+  - Returns True if alive, False if dead
+  - Logs damage events and death
 
-#### Documentation ✅
-- ✅ **CLAUDE.md Logging Guidelines** (comprehensive 7-section guide)
-  - When to use each log level (DEBUG, INFO, WARNING, ERROR)
-  - Error handling patterns (replace silent suppression)
-  - Logging best practices and examples
-  - Testing logs during development
-  - Module logging pattern
-  - Log file archiving
-  - Checklist for new modules
-- ✅ **ARCHITECTURE.md Logging Section**
-  - Logging system architecture details
-  - Handler configuration documentation
-  - Module logging pattern
-  - Error handling with logging examples
-- ✅ **README.md Updated**
-  - Added "Development Features" section
-  - Documented debug mode flag
-  - Added logger.py to project structure
-  - Updated run commands with debug mode
+#### Combat System Updates ✅
+- ✅ **Projectile combat** (game.py)
+  - Checks hasattr(zombie, "take_damage")
+  - Calls take_damage() for variants with health
+  - Normal zombies die instantly (backward compatible)
+  - Only awards points/spawns effects when zombie dies
+- ✅ **Melee combat** (game.py)
+  - Same health-aware damage system
+  - Melee does 10 damage (same as projectile)
+  - Tank zombies require 3 melee hits or 3 projectile hits
 
 ### Concepts Learned
 
-#### Professional Logging Practices
-- **Dual-handler pattern**
-  - Interactive debugging (console)
-  - Playtest archiving (file)
-  - Different log levels per handler
-  - Environment-based configuration
-- **Structured logging levels**
-  - DEBUG: Detailed state for debugging (verbose)
-  - INFO: Normal operations and milestones
-  - WARNING: Recoverable errors with fallbacks
-  - ERROR: Critical failures requiring attention
-- **Error visibility**
-  - Never suppress errors silently
-  - Always log exceptions with context
-  - Use `exc_info=True` for stack traces
-  - Playtest issues become discoverable
+#### Token-Efficient Asset Management
+- **Kenney-ONLY policy** implemented
+  - NO Pollinations image generation (saves 10k-50k tokens per image)
+  - Search Kenney collection exhaustively
+  - Ask user to provide if not found
+  - Updated game-artist skill to reflect policy
+- **game-artist skill usage**
+  - Successfully found ammo sprite (things_bronze.png)
+  - Found zombie variant sprites (Zombie 1 & 2)
+  - Visual inspection with Read tool
+  - All assets from Kenney = 0 token cost
 
-#### Python Logging Module
-- **Logger hierarchy**
-  - Module-based logger naming (`__name__`)
-  - Hierarchical logger control (future capability)
-  - Clear source identification in logs
-- **Handler configuration**
-  - StreamHandler for console output
-  - FileHandler for persistent logs
-  - Custom formatters per handler
-  - Level filtering per handler
-- **Environment-based configuration**
-  - `os.environ.get("GAME_DEBUG")` for runtime control
-  - No code changes to toggle verbosity
-  - Production-friendly debugging
+#### Entity Variant Patterns
+- **Config-driven variants**
+  - FastZombieConfig and TankZombieConfig
+  - Each variant has unique stats
+  - Easy to balance by tweaking config
+- **Health tracking system**
+  - Added health attribute to variants
+  - take_damage() method pattern
+  - Backward compatible with normal zombies
+- **Polymorphism with hasattr()**
+  - Check for take_damage() method at runtime
+  - Works with both normal and variant zombies
+  - Clean, maintainable code
+
+#### Direct Implementation vs Subagents
+- **When to skip subagents:**
+  - Zombie variants are simple extensions of existing entity
+  - Pattern already established (zombie.py)
+  - Faster to implement directly
+  - Subagents better for completely new entity types
+- **Verification still applies:**
+  - Checked existing zombie.py structure first
+  - Followed established patterns (update, draw, rotation)
+  - Maintained consistency with existing code
+
+### Verification Discipline
+
+**Assets Verified:**
+- Space Shooter Redux / Power-ups folder browsed
+- things_bronze.png visually inspected (orange bullets)
+- Zombie 1 and Zombie 2 sprites verified (zoimbie1_stand.png, zombie2_stand.png)
+
+**Patterns Followed:**
+- Zombie class structure (zombie.py) reviewed
+- Powerup class pattern (powerup.py) extended
+- Combat system logic (game.py) analyzed before modifying
+
+**Best Practices Applied:**
+- Config-driven stats (no hardcoded values)
+- Logging for lifecycle events
+- Type hints in method signatures
+- Frame-independent movement with delta_time
+
+### Key Lessons
+
+1. **Token budget management matters**
+   - Pollinations base64 images = 10k-50k tokens each
+   - Kenney asset search = ~0 tokens (just file operations)
+   - Made policy decision: Kenney-only, ask user if not found
+   - Updated game-artist skill to enforce policy
+
+2. **Direct implementation can be faster**
+   - Zombie variants were simple extensions
+   - entity-builder would have been overkill
+   - Know when to use subagents vs direct coding
+   - Subagents for new patterns, direct for variants
+
+3. **Backward compatibility with hasattr()**
+   - hasattr() checks for method existence
+   - Works with both old (normal) and new (variant) zombies
+   - Clean polymorphism without inheritance
+   - Maintainable and testable
+
+4. **Visual asset browsing works well**
+   - Preview.png files show full pack
+   - Read tool with Claude Vision = instant visual inspection
+   - Spritesheet files show many sprites at once
+   - Much faster than searching by filename
+
+5. **Config-driven balance is powerful**
+   - Tweak FastZombieConfig.speed to rebalance
+   - Adjust TankZombieConfig.health for difficulty
+   - Change spawn probabilities in spawn_zombie()
+   - No code changes needed for balance updates
+
+### Statistics
+
+- **Files Created:** 3 (zombie_fast.py, zombie_tank.py, powerup_ammo.png)
+- **Files Modified:** 3 (config.py, powerup.py, game.py)
+- **Lines Added:** ~250 (zombie variants, health system, combat updates)
+- **Assets Integrated:** 3 (ammo sprite, 2 zombie variant sprites)
+- **Config Dataclasses Added:** 2 (FastZombieConfig, TankZombieConfig)
+- **New Power-up Types:** 1 (AMMO)
+- **New Zombie Types:** 2 (Fast, Tank)
+- **Token Savings:** Estimated 30k-60k (avoided Pollinations for 3 images)
+
+### Session 6 Final Status
+
+**Completion:** 100% ✅
+**All Features Working:**
+1. ✅ AMMO power-up spawns and restores 10-20 rounds
+2. ✅ Orange bullet sprite from Kenney (things_bronze.png)
+3. ✅ Fast zombies spawn (20% probability) - quick but fragile
+4. ✅ Tank zombies spawn (10% probability) - slow but tough
+5. ✅ Health system works (Tank takes 3 hits to kill)
+6. ✅ Combat handles both normal and variant zombies
+7. ✅ Kenney-ONLY asset policy enforced (no token waste)
+8. ✅ game-artist skill updated for token efficiency
+
+---
+
+## Session 7: Magazine/Stash Ammo System & Weighted Power-up Spawning ✅ COMPLETE
+
+**Date:** December 29, 2024
+**Duration:** ~2 hours
+**Git Commit:** TBD - Ready for commit
+
+### What We Built
+
+#### Magazine/Stash Ammo System ✅
+- ✅ **Pistol Magazine** - Holds 6 bullets (was 30)
+- ✅ **Reserve Stash** - 18 initial, 60 max capacity
+- ✅ **Reload Mechanic** - 1.5 second timer, transfers from stash to magazine
+- ✅ **R key reload** - No longer instant, requires stash ammo
+- ✅ **Magazine-based firing** - F key consumes from magazine, not stash
+- ✅ **Cannot fire while reloading** - Prevents exploits
+
+#### Weighted Power-up Spawning ✅
+- ✅ **AMMO drops now 50%** of power-ups (was 25%)
+- ✅ **Weighted random selection** - AMMO has 3x weight vs other types
+- ✅ **Probabilities:**
+  - AMMO: 50% (3/6 weight)
+  - HEALTH: 16.7% (1/6 weight)
+  - SPEED: 16.7% (1/6 weight)
+  - SHIELD: 16.7% (1/6 weight)
+
+#### AMMO Power-up Behavior Change ✅
+- ✅ **Now adds to stash** (was adding to ammo pool)
+- ✅ **Restores 10-20 rounds** to reserve ammo
+- ✅ **Capped at max_stash** (60 rounds)
+
+#### UI Improvements ✅
+- ✅ **New ammo display** - "MAG: 6 | STASH: 18"
+- ✅ **Color coding:**
+  - Red: Magazine empty (0)
+  - Orange: Low (≤2 bullets)
+  - White: Normal
+- ✅ **Reload indicator** - Shows "RELOADING..." during reload
+
+### Implementation Details
+
+**Config Changes (config.py):**
+```python
+@dataclass
+class WeaponConfig:
+    magazine_size: int = 6
+    initial_stash: int = 18
+    max_stash: int = 60
+    fire_rate: float = 0.3
+    reload_time: float = 1.5  # Was 0.0 (instant)
+
+@dataclass
+class PowerupConfig:
+    powerup_weights: dict = field(
+        default_factory=lambda: {
+            "HEALTH": 1.0,
+            "SPEED": 1.0,
+            "SHIELD": 1.0,
+            "AMMO": 3.0,  # 3x more likely
+        }
+    )
+```
+
+**Player Changes (player.py):**
+- Removed: `self.ammo`, `self.max_ammo`
+- Added: `self.magazine`, `self.magazine_size`, `self.stash`, `self.max_stash`, `self.is_reloading`, `self.reload_timer`
+- `fire()` - Checks magazine, prevents firing while reloading
+- `reload()` - Starts 1.5s timer, checks stash availability
+- `update_reload()` - Handles timer countdown and bullet transfer
+
+**Powerup Changes (powerup.py):**
+- Weighted random selection using `random.choices()` with config weights
+- AMMO `apply_effect()` now modifies `player.stash` instead of `player.ammo`
+
+**Game Changes (game.py):**
+- `render_ammo()` - Shows "MAG: X | STASH: Y" or "RELOADING..."
+- Color-coded magazine status (red/orange/white)
+
+### Concepts Learned
+
+#### Realistic Reload Mechanics
+- **Timed reloads** add tactical depth (can't spam reload)
+- **Magazine/stash separation** creates resource management
+- **Cannot fire while reloading** prevents exploits
+- **Stash as reward** makes AMMO drops valuable
+
+#### Weighted Random Selection
+- **`random.choices()` with weights** - Not equal probability
+- **Relative weights** - 3:1:1:1 = 50%:16.7%:16.7%:16.7%
+- **Config-driven weights** - Easy to balance without code changes
+- **Field with default_factory** - For mutable default values in dataclasses
+
+#### State Management for Actions
+- **`is_reloading` flag** - Track ongoing action
+- **`reload_timer` countdown** - Async timer pattern
+- **Prevent actions during states** - Can't fire while reloading
+- **State transitions** - Timer reaches zero → complete reload
+
+### Key Lessons
+
+1. **Magazine systems add depth**
+   - Forces tactical decision-making (when to reload)
+   - Prevents infinite firing (6-shot limit)
+   - Creates tension (reload at right time)
+   - Makes AMMO power-ups essential
+
+2. **Weighted spawning is powerful**
+   - Can balance drop rates without code changes
+   - More flexible than equal probability
+   - Config-driven = easy iteration
+   - `random.choices()` is cleaner than manual probability checks
+
+3. **Timer-based actions**
+   - `update()` pattern for countdown timers
+   - Prevents instant actions (more realistic)
+   - Can show UI feedback during timer (RELOADING...)
+   - Easy to tune (just change reload_time config)
+
+4. **Dataclass field() for mutable defaults**
+   - `field(default_factory=lambda: {...})` for dicts
+   - Prevents shared mutable default bug
+   - Type-safe configuration
+   - Clear, declarative code
+
+5. **UI feedback for state**
+   - Color coding (red/orange/white) shows urgency
+   - "RELOADING..." text communicates state
+   - Right-aligned UI maintains consistency
+   - Player always knows ammo status
+
+### Statistics
+
+- **Files Modified:** 4 (config.py, player.py, powerup.py, game.py)
+- **Lines Changed:** ~150
+- **New Attributes:** 6 (magazine, magazine_size, stash, max_stash, is_reloading, reload_timer)
+- **Removed Attributes:** 2 (ammo, max_ammo)
+- **New Methods:** 1 (update_reload)
+- **Config Values Changed:** 5 (WeaponConfig restructured, powerup_weights added)
+- **AMMO Drop Rate:** 5% → 10% (effective: 20% base × 50% type probability)
+
+### Session 7 Final Status
+
+**Completion:** 100% ✅
+**All Features Working:**
+1. ✅ Magazine holds 6 bullets, starts full
+2. ✅ Stash holds reserve ammo (18 initial, 60 max)
+3. ✅ R key starts 1.5 second reload from stash
+4. ✅ F key fires from magazine (not stash)
+5. ✅ Cannot fire when magazine empty or reloading
+6. ✅ AMMO power-ups add to stash (not magazine)
+7. ✅ AMMO drops appear 50% of the time (3x weight)
+8. ✅ UI shows "MAG: X | STASH: Y" with color coding
+9. ✅ "RELOADING..." indicator during reload
+
+---
+
+## Session 8: Sound Effects System ✅ COMPLETE
+
+**Date:** December 29, 2024
+**Duration:** ~2 hours
+**Git Commit:** TBD - Ready for commit
+
+### What We Built
+
+#### Sound System (src/sound.py, assets/sounds/) ✅
+- ✅ **10 Kenney Retro/8-Bit Sound Effects**
+  - fire.ogg - Laser zap (Digital Audio/laser1.ogg)
+  - reload_start.ogg - Descending tone (Digital Audio/phaserDown1.ogg)
+  - reload_complete.ogg - Ascending tone (Digital Audio/phaserUp4.ogg)
+  - zombie_death.ogg - Retro explosion (Retro Sounds 2/explosion4.ogg)
+  - player_damage.ogg - Hurt sound (Retro Sounds 2/hurt2.ogg)
+  - shield_block.ogg - Force field (Sci-Fi/forceField_001.ogg)
+  - powerup_collect.ogg - Pickup bleep (Digital Audio/powerUp5.ogg)
+  - wave_start.ogg - Alert fanfare (Digital Audio/threeTone1.ogg)
+  - wave_complete.ogg - Victory jingle (Retro Sounds 2/upgrade2.ogg)
+  - game_over.ogg - Game over sound (Retro Sounds 2/gameover1.ogg)
+- ✅ **Module-Level Sound System**
+  - init_sounds() - Preloads all sounds with volume control
+  - play_sound(name) - Plays sound by string identifier
+  - set_master_volume() - Runtime volume adjustment
+  - toggle_sound() - Enable/disable all sounds
+- ✅ **SoundConfig Dataclass** (config.py)
+  - Master volume: 0.7 (70%)
+  - Individual volume controls per sound
+  - Enabled flag for quick mute
+  - Sounds directory path
+
+#### Sound Integration (game.py, player.py) ✅
+- ✅ **11 Sound Events Integrated**
+  - Fire projectile (F key) → "fire" sound
+  - Reload start (R key) → "reload_start" sound
+  - Reload complete (timer) → "reload_complete" sound
+  - Zombie death (collision) → "zombie_death" sound
+  - Player damage (zombie hit) → "player_damage" sound
+  - Shield block (damage absorbed) → "shield_block" sound
+  - Power-up collect (pickup) → "powerup_collect" sound
+  - Wave start (new wave) → "wave_start" sound
+  - Wave complete (all zombies killed) → "wave_complete" sound
+  - Game over (player death) → "game_over" sound
+
+#### SDL Audio Driver Fallback ✅
+- ✅ **Headless Environment Support**
+  - Tries default audio driver first
+  - Falls back to SDL dummy driver if no audio device
+  - Game continues without audio output (WSL/headless)
+  - Logs all sound events to debug log
+  - No crashes on missing audio hardware
+
+### Concepts Learned
+
+#### pygame.mixer Audio System
+- **Sound loading and caching**
+  - pygame.mixer.init() required before loading
+  - pygame.mixer.Sound() loads .ogg/.wav files
+  - Module-level cache prevents duplicate loading
+  - set_volume() on Sound objects for per-sound control
+- **SDL audio drivers**
+  - Default driver uses system audio
+  - Dummy driver for testing/headless environments
+  - Environment variable: SDL_AUDIODRIVER='dummy'
+  - pygame.mixer.quit() to clean up failed init
+
+#### Module-Level State Pattern
+- **Global sound cache**
+  - _sounds: dict[str, pygame.mixer.Sound]
+  - _initialized: bool flag
+  - Single initialization, reused across game
+- **Graceful degradation**
+  - Sound system disabled if init fails
+  - Game continues without audio
+  - No impact on gameplay functionality
+
+#### Audio Asset Management
+- **Kenney audio collection**
+  - Digital Audio pack (laser sounds, power-ups)
+  - Retro Sounds 2 pack (explosions, hurt, game over)
+  - Sci-Fi pack (force field)
+  - All CC0-licensed (free for any use)
+- **File format choice**
+  - .ogg files (compressed, smaller)
+  - pygame.mixer supports .ogg natively
+  - Cross-platform compatibility
 
 ### Verification Discipline
 
 **APIs Verified:**
-- Python `logging` module (handlers, formatters, levels)
-- `logging.getLogger(__name__)` for module-based loggers
-- `os.environ.get()` for environment variables
-- `datetime.now().strftime()` for timestamp formatting
-- `pathlib.Path` for log file management
+- pygame.mixer.init() - Initialize audio subsystem
+- pygame.mixer.Sound(path) - Load sound file
+- Sound.set_volume(volume) - Set sound volume (0.0-1.0)
+- Sound.play() - Play sound effect
+- pygame.mixer.quit() - Clean up mixer
+
+**Testing:**
+- Tested sound system with GAME_DEBUG=1
+- Verified all 10 sounds load successfully
+- Confirmed sound events trigger in logs
+- Validated WSL dummy driver fallback works
 
 **Best Practices Applied:**
-- Consistent logging pattern across all modules
-- Descriptive log messages with context (coordinates, IDs, values)
-- Error handling with logged warnings instead of silent suppression
-- Comprehensive documentation for team practices
+- Config-driven volume controls
+- Module-level caching for efficiency
+- Graceful fallback for missing audio
+- Comprehensive logging for debugging
 
 ### Key Lessons
 
-1. **Logging is essential for game development**
-   - Playtests generate valuable debugging data
-   - Timestamped logs enable post-session analysis
-   - Silent errors are impossible to debug
-   - File logs preserve full history
+1. **Audio requires initialization**
+   - pygame.mixer.init() MUST run before loading sounds
+   - init() can fail in headless environments
+   - Always handle initialization errors gracefully
 
-2. **Debug mode improves development workflow**
-   - Quick toggle via environment variable
-   - No code changes needed
-   - Verbose when needed, quiet for playtests
-   - Console + file gives best of both worlds
+2. **WSL has no audio by default**
+   - Windows Subsystem for Linux lacks audio output
+   - SDL dummy driver allows sound system to work
+   - Logs show sounds trigger even without output
+   - Solutions: run on Windows, install WSLg, or PulseAudio bridge
 
-3. **Documentation scales team practices**
-   - Logging guidelines prevent inconsistency
-   - New modules follow established patterns
-   - Code review easier with documented standards
-   - Future contributors understand practices
+3. **Sound enhances game feel**
+   - Audio feedback for all player actions
+   - Positive reinforcement (power-up collect)
+   - Negative feedback (damage, game over)
+   - Retro/8-bit aesthetic matches visual style
 
-4. **Error visibility prevents bugs**
-   - Silent suppression hides problems
-   - Logged warnings surface issues early
-   - Stack traces aid debugging
-   - Playtest logs reveal edge cases
+4. **Module-level pattern for singletons**
+   - Sound system should initialize once
+   - Global cache prevents duplicate loading
+   - Clean API: init_sounds(), play_sound(name)
+   - Easy to use throughout codebase
+
+5. **Kenney audio assets are excellent**
+   - Professional quality, free CC0 license
+   - Organized by theme/style
+   - Perfect for game prototyping
+   - 176KB total for all 10 sounds
 
 ### Statistics
 
-- **Files Created:** 1 (logger.py)
-- **Files Modified:** 10+ (all modules + docs)
-- **Lines Added:** ~150 (logging system + integration)
-- **Documentation:** 3 files updated (CLAUDE.md, ARCHITECTURE.md, README.md)
-- **Error Suppression Removed:** All `contextlib.suppress` replaced
-- **Logging Coverage:** 100% of modules now have logging
-- **All quality checks:** ✅ PASSING (ruff, mypy, pytest)
+- **Files Created:** 11 (sound.py + 10 .ogg files)
+- **Files Modified:** 3 (config.py, game.py, player.py)
+- **Lines Added:** ~180 (sound.py + SoundConfig + integrations)
+- **Sound Events:** 11 (fire, reload x2, death, damage, shield, powerup, wave x2, game over)
+- **Audio Files:** 176KB total (10 .ogg files)
+- **Volume Controls:** 11 (master + 10 individual)
+- **All quality checks:** ✅ PASSING (ruff, mypy, pytest, pre-commit)
 
-### Session 4.5 Final Status
+### Session 8 Final Status
 
 **Completion:** 100% ✅
 **All Features Working:**
-1. ✅ Dual-handler logging (console + file)
-2. ✅ Debug mode environment flag
-3. ✅ Timestamped log files
-4. ✅ All modules integrated with logging
-5. ✅ Silent error suppression eliminated
-6. ✅ Comprehensive documentation
+1. ✅ Sound system initialized with pygame.mixer
+2. ✅ 10 retro/8-bit sounds loaded from Kenney collection
+3. ✅ Fire sound plays when shooting (F key)
+4. ✅ Reload sounds play for start and complete
+5. ✅ Zombie death sound on kill
+6. ✅ Player damage sound when hit
+7. ✅ Shield block sound when damage absorbed
+8. ✅ Power-up collect sound on pickup
+9. ✅ Wave start/complete sounds on wave events
+10. ✅ Game over sound on player death
+11. ✅ SDL dummy driver fallback for WSL/headless
+12. ✅ All sounds verified in debug logs
+
+---
+
+## Session 9: Claude Code Hooks ✅ COMPLETE
+
+**Date:** December 29, 2024
+**Duration:** ~1 hour
+**Git Commit:** TBD - Ready for commit
+
+### What We Built
+
+#### Hook System Setup (.claude/) ✅
+- ✅ **Hooks Directory** - `.claude/hooks/` for all hook scripts
+- ✅ **Settings Configuration** - `.claude/settings.json` with hook registration
+- ✅ **4 Hook Scripts** - Executable bash/python scripts for automation
+
+#### Hook 1: Auto-Format Python (PostToolUse) ✅
+- ✅ **Script:** `.claude/hooks/auto-format.sh`
+- ✅ **Trigger:** After Edit or Write tools complete
+- ✅ **Action:** Runs `ruff format` on Python files
+- ✅ **Purpose:** Automatic code formatting on save
+- ✅ **Implementation:**
+  ```bash
+  file_path=$(jq -r '.tool_input.file_path // empty')
+  if [[ "$file_path" == *.py ]]; then
+      ruff format "$file_path" 2>/dev/null
+      echo "Formatted: $file_path"
+  fi
+  ```
+
+#### Hook 2: Command Logger (PreToolUse) ✅
+- ✅ **Script:** `.claude/hooks/log-commands.sh`
+- ✅ **Trigger:** Before Bash tool runs
+- ✅ **Action:** Logs command to `logs/claude-commands.log`
+- ✅ **Purpose:** Audit trail of all bash commands
+- ✅ **Implementation:**
+  ```bash
+  jq -r '"[\(.session_id[0:8])] \(.tool_input.command)"' >> "$CLAUDE_PROJECT_DIR/logs/claude-commands.log"
+  ```
+
+#### Hook 3: Session Setup (SessionStart) ✅
+- ✅ **Script:** `.claude/hooks/session-start.sh`
+- ✅ **Trigger:** When Claude Code session begins
+- ✅ **Action:** Display project info, set GAME_DEBUG=1
+- ✅ **Purpose:** Consistent dev environment setup
+- ✅ **Implementation:**
+  ```bash
+  echo "=== Zombie Survival Game Session ==="
+  echo "Python: $(python --version 2>&1)"
+  echo "Working dir: $CLAUDE_PROJECT_DIR"
+  if [ -n "$CLAUDE_ENV_FILE" ]; then
+      echo 'export GAME_DEBUG=1' >> "$CLAUDE_ENV_FILE"
+  fi
+  ```
+
+#### Hook 4: Prompt Reminder (UserPromptSubmit) ✅
+- ✅ **Script:** `.claude/hooks/prompt-reminder.py`
+- ✅ **Trigger:** When user submits a prompt
+- ✅ **Action:** Reminds about verification protocol for pygame questions
+- ✅ **Purpose:** Enforce verification-first development
+- ✅ **Implementation:**
+  ```python
+  prompt = data.get("tool_input", {}).get("prompt", "").lower()
+  if "pygame" in prompt and ("how" in prompt or "what" in prompt):
+      print(json.dumps({
+          "systemMessage": "Remember: Verify pygame APIs with ref.tools before suggesting code!"
+      }))
+  ```
+
+### Concepts Learned
+
+#### Hook System Architecture
+- **Hook events** - Lifecycle points where hooks execute
+  - PreToolUse - Before tool runs (can block)
+  - PostToolUse - After tool completes
+  - SessionStart - Session initialization
+  - UserPromptSubmit - User sends message
+  - (Others: SessionEnd, PrePrompt, PostPrompt, etc.)
+- **Hook configuration** - `.claude/settings.json`
+  - Matchers - Regex to filter which tools trigger
+  - Command - Shell script/executable to run
+  - Type - "command" for shell scripts
+- **Hook input/output**
+  - JSON via stdin (session_id, tool_name, tool_input, cwd)
+  - Exit codes (0=success, 2=block action)
+  - JSON output for decisions/messages
+
+#### Environment Variables
+- **$CLAUDE_PROJECT_DIR** - Project root path
+- **$CLAUDE_ENV_FILE** - File to persist env vars (SessionStart only)
+- **$CLAUDE_SESSION_ID** - Current session identifier
+- Available in all hook scripts via environment
+
+#### Automation Patterns
+- **Auto-formatting on save**
+  - PostToolUse hook runs ruff format
+  - No manual formatting needed
+  - Consistent code style enforced
+- **Command audit logging**
+  - PreToolUse captures all bash commands
+  - Useful for debugging and review
+  - Session ID prefix for tracking
+- **Session initialization**
+  - SessionStart sets up dev environment
+  - Can display project info
+  - Configure environment variables
+- **Context injection**
+  - UserPromptSubmit can add system messages
+  - Reminds about project-specific practices
+  - Enforces verification protocol
+
+### Verification Discipline
+
+**Hook System Research:**
+- Used claude-code-guide subagent to research hooks
+- Verified hook event types and lifecycle
+- Confirmed JSON input/output format
+- Validated environment variable availability
+- Checked executable permissions requirements
+
+**Testing:**
+- Created test_hooks.py to verify auto-format hook
+- Ran bash commands to test command logger
+- All hook scripts made executable (chmod +x)
+- Verified .claude/settings.json JSON structure
+
+**Best Practices Applied:**
+- Executable permissions on all hook scripts
+- Shebang lines for interpreter specification
+- Error handling (2>/dev/null for ruff)
+- Comments documenting hook purpose
+- JSON parsing with jq for bash scripts
+
+### Key Lessons
+
+1. **Hooks enable powerful automation**
+   - Auto-format on save (no manual commands)
+   - Command logging for audit trail
+   - Session setup for consistent environment
+   - Context injection for reminders
+   - Deterministic, always execute when triggered
+
+2. **Configuration-driven behavior**
+   - .claude/settings.json controls all hooks
+   - Matchers filter which tools trigger hooks
+   - Easy to enable/disable hooks
+   - Can add more hooks without code changes
+
+3. **Hooks require session reload**
+   - Created hooks don't activate until next session
+   - Settings.json changes need reload
+   - Plan for testing in future session
+   - Current session verifies creation only
+
+4. **JSON stdin/stdout protocol**
+   - Hooks receive JSON via stdin
+   - jq parses JSON in bash scripts
+   - Python json module for .py scripts
+   - Can output JSON for decisions/messages
+
+5. **Environment variables provide context**
+   - $CLAUDE_PROJECT_DIR for absolute paths
+   - $CLAUDE_ENV_FILE to persist variables
+   - $CLAUDE_SESSION_ID for tracking
+   - Available in all hook types
+
+### Statistics
+
+- **Files Created:** 5 (.claude/hooks/ + 4 scripts + settings.json)
+- **Hook Scripts:** 4 (auto-format, log-commands, session-start, prompt-reminder)
+- **Hook Events Used:** 4 (PostToolUse, PreToolUse, SessionStart, UserPromptSubmit)
+- **Lines of Hook Code:** ~50 (bash + python)
+- **Automation Coverage:** 4 workflows (format, log, setup, remind)
+- **All scripts:** ✅ EXECUTABLE (chmod +x)
+
+### Session 9 Final Status
+
+**Completion:** 100% ✅
+**All Hooks Created:**
+1. ✅ .claude/hooks/ directory created
+2. ✅ auto-format.sh - Auto-format Python on save (PostToolUse)
+3. ✅ log-commands.sh - Log bash commands (PreToolUse)
+4. ✅ session-start.sh - Setup dev environment (SessionStart)
+5. ✅ prompt-reminder.py - Verification reminders (UserPromptSubmit)
+6. ✅ .claude/settings.json - Hook registration complete
+7. ✅ All scripts executable and documented
+8. ✅ Ready for testing in next session
 
 ---
 
 ## Overall Progress
 
-**Current Phase:** 3 - Skills & Subagents
-**Current Session:** 4.5 / 15 (100% complete)
-**Sessions Completed:** 4.5 / 15 = 30%
-**Game Completion:** ~45% (core mechanics + power-ups + logging, needs more features)
+**Current Phase:** 4 - Advanced Agents & Learning Hooks
+**Current Session:** 9 / 15 (100% complete)
+**Sessions Completed:** 9 / 15 = 60%
+**Game Completion:** ~80% (full combat system + ammo management + variants + sound, needs polish)
 
 ### Zombie Survival Features
 
@@ -1063,11 +1568,11 @@
 - [x] Game states (menu, game over) ✅
 - [x] Sprite integration with rotation ✅
 - [x] AI asset generation setup ✅
-- [x] Power-ups and collectibles ✅
+- [x] Power-ups and collectibles (HEALTH, SPEED, SHIELD, AMMO) ✅
 - [x] Logging system with debug mode ✅
-- [ ] Power-up sprites (visual distinction)
-- [ ] Different zombie types
-- [ ] Sound and music
+- [x] Ranged combat (F key, projectiles, ammo) ✅
+- [x] Different zombie types (Normal, Fast, Tank) ✅
+- [x] Sound effects (10 retro sounds, pygame.mixer) ✅
 - [ ] Particle effects
 - [ ] Boss zombies
 - [ ] Polish and menus
@@ -1084,8 +1589,12 @@
 - [x] GitHub Actions CI/CD ✅
 - [x] Test-driven development basics ✅
 - [x] MCP integration (ref.tools, GitHub, Pollinations) ✅
-- [x] Skills creation (python-testing) ✅
+- [x] Skills creation (python-testing, pygame-patterns, game-artist) ✅
+- [x] Subagent creation (entity-builder) ✅
 - [x] Plan mode & agent workflows ✅
+- [x] Subagent invocation (general-purpose, Explore, Plan) ✅
+- [x] Hooks (PreToolUse, PostToolUse, SessionStart, UserPromptSubmit) ✅
+- [ ] Slash commands
 - [ ] Advanced subagent composition
 - [ ] Complex MCP server creation
 - [ ] Context management optimization
@@ -1094,21 +1603,38 @@
 
 ## Next Steps
 
-**Current:** Ready for Session 5!
-**Phase 3 Goals:** Skills & Subagents (Sessions 4-6)
+**Current:** Session 9 complete! Ready for Session 10!
+**Phase 4 Goals:** Advanced Agents & Learning Hooks (Sessions 7-9) - ✅ COMPLETE
 
-### Session 5 Planned Tasks:
-1. **Zombie variants** - Different types with unique behaviors (fast, tank, exploding)
-2. **Character animations** - Sprite-based animation system (idle, walking, attacking)
-3. **Enhanced power-up visuals** - Distinct sprites for each type
-4. **Sound effects** - Attack sounds, zombie groans, ambient music
-5. **Particle effects** - Blood splatter, kill effects, power-up sparkles
+### Remaining Agentic Concepts to Learn:
+1. **Slash Commands** - Custom user-invocable commands
+   - Create custom slash commands
+   - Integrate with project workflow
+   - User shortcuts for common tasks
+2. **Progressive Disclosure** - Context management techniques
+   - Dynamic context loading
+   - Smart context prioritization
+   - Token budget optimization
+3. **MCP Server Creation** - Build custom MCP servers
+   - Design server interface
+   - Implement custom tools
+   - Integrate with Claude Code
+4. **Documentation Generation** - Automated documentation
+   - Code to docs automation
+   - API documentation generation
+   - Project documentation maintenance
+5. **GitHub Releases** - Release automation
+   - Version tagging
+   - Changelog generation
+   - Release notes automation
 
-### Agentic Concepts to Learn (Session 4-6):
-- Advanced subagent composition
-- Complex MCP server workflows
-- Skill composition and chaining
-- Context management optimization
+### Game Polish Ideas (Optional):
+- Particle effects for explosions/hits
+- Boss zombie encounters
+- Menu improvements (difficulty settings, controls screen)
+- Achievement system
+- High score leaderboard
+- More weapon types (shotgun, rifle)
 
 ---
 
@@ -1118,5 +1644,3 @@
 
 Every session must maintain verification-first discipline.
 Build with confidence by verifying before coding.
-
-**🎮 Sessions 1-4.5 complete! Ready for zombie variants and animations! 🧟‍♂️**

@@ -131,7 +131,7 @@ Before each code block:
 
 ---
 
-### Phase 2: Process & Documentation (Sessions 3-4) ✅ COMPLETE
+### Phase 2: Process & Documentation (Sessions 3-4.5) ✅ COMPLETE
 **Concepts Learned:**
 - ✅ Modern development tooling (ruff, mypy, pytest)
 - ✅ Pre-commit hooks + GitHub Actions CI/CD
@@ -139,30 +139,37 @@ Before each code block:
 - ✅ Dataclass-based configuration patterns
 - ✅ State machine architecture
 - ✅ Verification protocols in practice
+- ✅ Professional logging system (dual-output, debug mode)
+- ✅ MCP integration (ref.tools, GitHub, Pollinations)
+- ✅ Skills creation (python-testing, game-artist)
 
 **What You've Built:**
 - ✅ Melee combat system (player attacks zombies)
 - ✅ Health and damage system
-- ✅ Score/kill counter
-- ✅ Game states (menu, playing, game over)
-- ✅ Wave system (increasing difficulty)
+- ✅ Score/kill counter with persistent high score
+- ✅ Game states (MENU, PLAYING, PAUSED, GAME_OVER)
+- ✅ Wave system (exponential scaling)
+- ✅ Power-up system (Health, Speed, Shield)
+- ✅ Sprite integration with rotation
+- ✅ Logging system with GAME_DEBUG mode
 
 ---
 
-### Phase 3: Agentic Tools Basics (Sessions 5-6)
-**Concepts Learned:**
-- ✅ Your first Skill (pygame-patterns)
-- ✅ Your first Subagent (entity-builder)
-- ✅ Permission management
-- ✅ Project-scoped MCP configuration
-- ✅ Skills with verification requirements
+### Phase 3: Agentic Tools Basics (Sessions 5-6) 🔄 IN PROGRESS
+**Concepts to Learn:**
+- 🆕 Your first custom Skill (pygame-patterns)
+- 🆕 Your first custom Subagent (entity-builder)
+- ✅ Permission management (review existing skills)
+- ✅ Project-scoped MCP configuration (already have 3 MCPs)
+- ✅ Skills with verification (python-testing, game-artist)
 
 **What You'll Build:**
-- Weapon system (different weapons)
-- Ranged combat (shooting)
-- Ammunition system
-- Resource pickups (health, ammo)
-- Multiple zombie types
+- Weapon system (PISTOL, then SHOTGUN/RIFLE)
+- Ranged combat (mouse aim + shooting)
+- Ammunition system (ammo tracking, reload)
+- Projectile entity (bullets with collision)
+- Resource pickups (AMMO power-up)
+- Multiple zombie types (Normal, Fast, Tank)
 
 ---
 

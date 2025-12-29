@@ -93,7 +93,7 @@ def init_sounds() -> None:
     for name, filename in sound_files.items():
         sound_path = sounds_dir / filename
         try:
-            sound = pygame.mixer.Sound(sound_path)
+            sound = pygame.mixer.Sound(str(sound_path))
             # Apply master volume * individual volume
             sound.set_volume(sound_config.master_volume * volumes.get(name, 1.0))
             _sounds[name] = sound

@@ -198,15 +198,11 @@ class Game:
             x = self.SCREEN_WIDTH + buffer
             y = random.randint(0, self.SCREEN_HEIGHT)
 
-        # Choose zombie type with weighted probabilities
-        rand = random.random()
-        zombie: Zombie | FastZombie | TankZombie
-        if rand < 0.70:  # 70% normal
-            zombie = Zombie(x, y)
-        elif rand < 0.90:  # 20% fast (0.70 to 0.90)
-            zombie = FastZombie(x, y)
-        else:  # 10% tank (0.90 to 1.00)
-            zombie = TankZombie(x, y)
+        # Choose zombie type with weighted probabilities (using random.choices)
+        zombie_types = [Zombie, FastZombie, TankZombie]
+        spawn_weights = [0.70, 0.20, 0.10]  # 70% normal, 20% fast, 10% tank
+        chosen_zombie_class = random.choices(zombie_types, weights=spawn_weights, k=1)[0]
+        zombie = chosen_zombie_class(x, y)
 
         self.zombies.append(zombie)
 

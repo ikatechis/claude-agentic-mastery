@@ -12,6 +12,7 @@ Usage:
     play_sound("fire")
 """
 
+import os
 from pathlib import Path
 
 import pygame
@@ -50,11 +51,8 @@ def init_sounds() -> None:
         # Try dummy audio driver as fallback (for testing/headless environments)
         logger.warning(f"Failed to initialize pygame.mixer with default driver: {e}")
         logger.info("Trying SDL dummy audio driver for testing...")
-        import os
-
         os.environ["SDL_AUDIODRIVER"] = "dummy"
         try:
-            pygame.mixer.quit()  # Clean up failed init
             pygame.mixer.init()
             logger.info("pygame.mixer initialized with dummy audio driver (no sound output)")
         except pygame.error as e2:

@@ -677,12 +677,198 @@
 
 ---
 
+## Session 5: Ranged Combat & Agentic Tools ✅ COMPLETE
+
+**Date:** December 29, 2024
+**Duration:** ~4 hours
+**Git Commit:** 62d7175 - feat: add ranged combat system with agentic tools (Session 5)
+
+### What We Built
+
+#### Agentic Tools (Phase 3 Learning) ✅
+- ✅ **pygame-patterns Skill** (`.claude/skills/pygame-patterns/`)
+  - SKILL.md with pattern documentation and best practices
+  - patterns/projectiles.md with verified pygame projectile patterns
+  - Codifies angle-to-velocity conversion (handles pygame Y-axis inversion)
+  - Frame-independent movement patterns with delta_time
+  - Circle collision detection patterns
+  - Projectile lifetime management
+- ✅ **entity-builder Subagent** (`.claude/agents/entity-builder.md`)
+  - Auto-generates pygame entities following project patterns
+  - Analyzes existing entities (player.py, zombie.py, powerup.py)
+  - Creates config dataclasses, sprite loading, logging integration
+  - Generates update(), render(), and collision methods
+  - Integration with python-testing skill for test generation
+  - **Successfully used to generate Projectile entity!**
+
+#### Ranged Combat System ✅
+- ✅ **Projectile Entity** (src/entities/projectile.py)
+  - Generated using entity-builder subagent
+  - Spawns at player position with facing direction
+  - Velocity-based movement (500 px/sec)
+  - Circle collision with zombies
+  - Lifetime tracking (2 sec despawn)
+  - Config-driven (ProjectileConfig)
+  - Yellow circle rendering (sprite fallback ready)
+- ✅ **Weapon System** (src/entities/player.py)
+  - Ammo tracking from WeaponConfig (30 max ammo)
+  - fire() method creates projectile in facing direction
+  - reload() method (instant for now)
+  - Fire cooldown (0.3 sec between shots)
+  - Uses existing player.angle for projectile direction
+  - No hardcoded values - all from config
+- ✅ **Game Integration** (src/game.py)
+  - F key fires projectile in facing direction
+  - R key reloads ammo
+  - Projectile-zombie collision detection
+  - Kill zombies on hit, award points, spawn power-ups
+  - Visual effects (kill flashes, damage popups)
+  - Projectile list management with safe removal
+- ✅ **Ammo UI Display**
+  - Right-aligned below score
+  - Color-coded: Red (empty), Orange (low <30%), White (normal)
+  - Shows current/max ammo (e.g., "Ammo: 25/30")
+
+#### Configuration (src/config.py) ✅
+- ✅ **ProjectileConfig**
+  - speed: 500.0 px/sec
+  - radius: 4 (collision)
+  - lifetime: 2.0 sec
+  - damage: 10
+  - color: yellow (255, 255, 0)
+  - sprite_path: "assets/sprites/projectile.png"
+- ✅ **WeaponConfig**
+  - max_ammo: 30
+  - fire_rate: 0.3 sec
+  - reload_time: 0.0 (instant)
+
+### Concepts Learned
+
+#### Agentic Tools Mastery
+- **Custom Skill Creation**
+  - YAML frontmatter (name, description, allowed-tools)
+  - Pattern documentation for reusability
+  - Integration with other skills
+  - Following project conventions
+- **Custom Subagent Creation**
+  - Markdown-based agent instructions
+  - Defining capabilities and inputs/outputs
+  - Pattern analysis workflows
+  - Code generation guidelines
+- **Subagent Invocation**
+  - Using Task tool with subagent_type='general-purpose'
+  - Providing comprehensive prompts with context
+  - Receiving and reviewing generated code
+  - Understanding agent vs direct coding trade-offs
+
+#### Game Design Decisions
+- **No Mouse Aiming**
+  - Shoot in facing direction (WASD controls rotation)
+  - Cleaner than dual-control scheme (WASD + mouse)
+  - Consistent with top-down movement style
+  - User-driven decision through AskUserQuestion
+- **Dual Combat System**
+  - SPACE: Melee attack (close range, no ammo)
+  - F: Ranged attack (distance, limited ammo)
+  - R: Reload (resource management)
+  - Strategic choice between combat types
+
+#### Projectile Physics
+- **Angle to Velocity Conversion**
+  - `angle_rad = math.radians(player.angle)`
+  - `velocity_x = math.cos(angle_rad) * speed`
+  - `velocity_y = -math.sin(angle_rad) * speed` (negative for pygame Y-axis!)
+  - 0° = right, 90° = up, 180° = left, 270° = down
+- **Frame-Independent Movement**
+  - `position += velocity * delta_time`
+  - Consistent speed across framerates
+  - Critical for projectile accuracy
+
+### Verification Discipline
+
+**APIs Verified This Session:**
+- `math.cos()` and `math.sin()` for angle-to-velocity conversion
+- `math.radians()` for degree-to-radian conversion
+- pygame Y-axis inversion handling
+- Projectile-zombie collision using existing circle collision pattern
+
+**Pattern Analysis:**
+- Explored player.py rotation system (found `player.angle` attribute)
+- Used Explore subagent to understand facing direction implementation
+- Referenced existing entity patterns for consistency
+
+**Best Practices Applied:**
+- Config-driven projectile and weapon settings
+- No hardcoded magic numbers
+- Logging for projectile lifecycle events
+- Frame-independent physics
+- Safe list iteration for removal (iterate over copy)
+
+### Key Lessons
+
+1. **Agentic tools amplify productivity**
+   - entity-builder subagent generated complete Projectile class
+   - pygame-patterns skill documents patterns for future use
+   - One-time setup, reusable across features
+   - Educational value: shows proper patterns
+
+2. **Plan mode prevents rework**
+   - User caught mouse aiming issue during planning
+   - Pivot to F key shooting was smooth
+   - AskUserQuestion tool enabled collaboration
+   - Better than building wrong feature
+
+3. **Config centralization scales**
+   - ProjectileConfig and WeaponConfig keep values tunable
+   - Easy to balance gameplay (adjust ammo, fire rate, etc.)
+   - No code changes needed for balance tweaks
+   - Professional game development practice
+
+4. **User input drives design**
+   - Mouse aiming → Rejected (conflicts with WASD)
+   - F key → Approved (keeps melee on SPACE)
+   - User knows their game feel preferences
+   - Collaboration > assumptions
+
+5. **Subagents vs direct coding**
+   - Subagents: Thorough, pattern-following, educational
+   - Direct: Faster, good for simple cases
+   - Choice depends on complexity and learning goals
+   - Both have their place in workflow
+
+### Statistics
+
+- **Files Created:** 4 (pygame-patterns skill, entity-builder subagent, projectile.py, patterns/projectiles.md)
+- **Files Modified:** 3 (config.py, player.py, game.py)
+- **Lines Added:** ~1,100 (skill docs, subagent, projectile, weapon system, integration)
+- **Agentic Tools Created:** 2 (first custom skill + subagent!)
+- **Entities Generated by Subagent:** 1 (Projectile)
+- **Config Dataclasses Added:** 2 (ProjectileConfig, WeaponConfig)
+- **New Controls:** 2 (F to fire, R to reload)
+- **All quality checks:** ✅ PASSING (ruff, mypy, pytest, pre-commit)
+
+### Session 5 Final Status
+
+**Completion:** 100% ✅
+**All Features Working:**
+1. ✅ pygame-patterns skill created and documented
+2. ✅ entity-builder subagent created and functional
+3. ✅ Projectile entity generated using subagent
+4. ✅ F key fires projectile in facing direction
+5. ✅ Projectiles kill zombies on hit
+6. ✅ Ammo decreases when firing
+7. ✅ R key reloads ammo
+8. ✅ Ammo UI displayed (color-coded)
+9. ✅ Both melee (SPACE) and ranged (F) combat work together
+
+---
+
 ## Overall Progress
 
 **Current Phase:** 3 - Agentic Tools Basics
-**Current Session:** 4.5 / 15 (100% complete)
-**Sessions Completed:** 4.5 / 15 = 30%
-**Game Completion:** ~45% (core mechanics + power-ups + logging, needs weapons/variants)
+**Current Session:** 5 / 15 (100% complete)
+**Sessions Completed:** 5 / 15 = 33%
+**Game Completion:** ~55% (core mechanics + ranged combat + power-ups, needs variants/polish)
 
 ### Zombie Survival Features
 
@@ -700,7 +886,7 @@
 - [x] AI asset generation setup ✅
 - [x] Power-ups and collectibles ✅
 - [x] Logging system with debug mode ✅
-- [ ] Ranged combat (weapons, shooting)
+- [x] Ranged combat (F key, projectiles, ammo) ✅
 - [ ] Different zombie types
 - [ ] Sound and music
 - [ ] Particle effects
@@ -719,8 +905,10 @@
 - [x] GitHub Actions CI/CD ✅
 - [x] Test-driven development basics ✅
 - [x] MCP integration (ref.tools, GitHub, Pollinations) ✅
-- [x] Skills creation (python-testing) ✅
+- [x] Skills creation (python-testing, pygame-patterns, game-artist) ✅
+- [x] Subagent creation (entity-builder) ✅
 - [x] Plan mode & agent workflows ✅
+- [x] Subagent invocation (general-purpose, Explore, Plan) ✅
 - [ ] Advanced subagent composition
 - [ ] Complex MCP server creation
 - [ ] Context management optimization
@@ -729,28 +917,35 @@
 
 ## Next Steps
 
-**Current:** Ready for Session 5!
+**Current:** Ready for Session 6!
 **Phase 3 Goals:** Agentic Tools Basics (Sessions 5-6)
 
-### Session 5 Planned Tasks:
-1. **pygame-patterns Skill** - Codify projectile/mouse/sprite patterns
-2. **entity-builder Subagent** - Auto-generate entity classes
-3. **Ranged Combat** - Mouse aim + click to shoot (PISTOL only)
-4. **Projectile System** - Bullets with collision detection
-5. **Ammunition** - Ammo tracking and reload
-6. **Ammo UI** - Display ammo count on screen
-
 ### Session 6 Planned Tasks:
-1. **AMMO Power-up** - Extend existing power-up system
-2. **Zombie Variants** - Normal, Fast, Tank types
-3. **Weapon Upgrades** - SHOTGUN, RIFLE
-4. **Balance & Polish** - Tune difficulty and drops
+1. **AMMO Power-up** - Pickup to restore ammunition
+   - Extend PowerupType enum with AMMO
+   - Random ammo restore (10-20 rounds)
+   - Orange sprite/color (distinct from health/speed/shield)
+2. **Zombie Variants** - Different types with unique stats
+   - Use entity-builder subagent to generate variants
+   - **Normal Zombie** - Current stats (baseline)
+   - **Fast Zombie** - 2x speed, less health, Zombie 2 sprite
+   - **Tank Zombie** - Slow, high health, Zombie 1 sprite (larger)
+   - Variant spawn probabilities in wave config
+3. **Weapon Upgrades** (Optional - if time permits)
+   - SHOTGUN - Spread pattern, close range
+   - RIFLE - High damage, slower fire rate
+   - Weapon pickup system
+4. **Balance & Polish**
+   - Tune projectile damage vs melee
+   - Adjust ammo drop rates
+   - Wave difficulty scaling
+   - Sprite integration (Kenney zombie variants)
 
-### Agentic Concepts to Learn (Phase 3):
-- Create custom Skill (pygame-patterns)
-- Create custom Subagent (entity-builder)
-- Permission management in skills
-- Use existing skills (game-artist, python-testing)
+### Agentic Tools to Use:
+- ✅ pygame-patterns skill (reference projectile patterns)
+- ✅ entity-builder subagent (generate zombie variants)
+- ✅ python-testing skill (test new power-ups and variants)
+- ✅ game-artist skill (search Kenney assets for zombie sprites)
 
 ---
 

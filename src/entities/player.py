@@ -8,6 +8,7 @@ import pygame
 from config import player_config, weapon_config
 from entities.projectile import Projectile
 from logger import get_logger
+from sound import play_sound
 from utils import load_sprite
 
 logger = get_logger(__name__)
@@ -57,9 +58,15 @@ class Player(pygame.sprite.Sprite):
 
         # Weapon system (ranged)
         self.weapon_config = weapon_config
-        self.ammo = self.weapon_config.max_ammo
-        self.max_ammo = self.weapon_config.max_ammo
         self.fire_cooldown = 0.0  # Seconds until can fire again
+
+        # Magazine/stash ammo system
+        self.magazine = self.weapon_config.magazine_size  # Start with full magazine
+        self.magazine_size = self.weapon_config.magazine_size
+        self.stash = self.weapon_config.initial_stash  # Reserve ammo
+        self.max_stash = self.weapon_config.max_stash
+        self.is_reloading = False
+        self.reload_timer = 0.0
 
         # Power-up effects
         self.speed_multiplier = 1.0  # Speed boost multiplier (1.0 = normal)
@@ -93,6 +100,9 @@ class Player(pygame.sprite.Sprite):
         # Update fire cooldown
         if self.fire_cooldown > 0:
             self.fire_cooldown -= delta_time
+
+        # Update reload timer
+        self.update_reload(delta_time)
 
         # Update speed boost timer
         if self.speed_boost_timer > 0:
@@ -180,6 +190,7 @@ class Player(pygame.sprite.Sprite):
                 # Shield blocks the damage
                 self.shield_hits_remaining -= 1
                 self.damage_cooldown = self.damage_cooldown_time
+                play_sound("shield_block")
                 logger.debug(f"Shield blocked damage, {self.shield_hits_remaining} hits remaining")
                 return True  # Hit was blocked by shield
             else:
@@ -187,6 +198,7 @@ class Player(pygame.sprite.Sprite):
                 self.health -= amount
                 self.health = max(0.0, self.health)  # Don't go below 0
                 self.damage_cooldown = self.damage_cooldown_time
+                play_sound("player_damage")
                 logger.debug(f"Took {amount} damage, health: {int(self.health)}/{self.max_health}")
                 return True
         return False
@@ -213,33 +225,87 @@ class Player(pygame.sprite.Sprite):
         """Fire a projectile in the facing direction.
 
         Returns:
-            Projectile instance if fired successfully, None if out of ammo or on cooldown
+            Projectile instance if fired successfully, None if magazine empty or on cooldown
         """
-        # Check ammo and cooldown
-        if self.ammo <= 0:
-            logger.debug("Cannot fire: out of ammo")
+        # Cannot fire while reloading
+        if self.is_reloading:
+            logger.debug("Cannot fire: currently reloading")
+            return None
+
+        # Check magazine and cooldown
+        if self.magazine <= 0:
+            logger.debug("Cannot fire: magazine empty")
             return None
 
         if self.fire_cooldown > 0:
             logger.debug("Cannot fire: weapon on cooldown")
             return None
 
-        # Consume ammo
-        self.ammo -= 1
+        # Consume bullet from magazine
+        self.magazine -= 1
         self.fire_cooldown = self.weapon_config.fire_rate
 
         # Create projectile at player position, facing player's direction
         projectile = Projectile(self.x, self.y, self.angle)
-        logger.debug(f"Player fired projectile (ammo: {self.ammo}/{self.max_ammo})")
+        logger.debug(
+            f"Player fired projectile (mag: {self.magazine}/{self.magazine_size}, stash: {self.stash})"
+        )
 
         return projectile
 
     def reload(self) -> None:
-        """Reload weapon to max ammo (instant for now)."""
-        if self.ammo < self.max_ammo:
-            old_ammo = self.ammo
-            self.ammo = self.max_ammo
-            logger.debug(f"Player reloaded ({old_ammo} → {self.ammo})")
+        """Start reloading weapon from stash to magazine."""
+        # Cannot reload if already reloading
+        if self.is_reloading:
+            logger.debug("Cannot reload: already reloading")
+            return
+
+        # Cannot reload if magazine is full
+        if self.magazine >= self.magazine_size:
+            logger.debug("Cannot reload: magazine already full")
+            return
+
+        # Cannot reload if stash is empty
+        if self.stash <= 0:
+            logger.debug("Cannot reload: stash empty")
+            return
+
+        # Start reload timer
+        self.is_reloading = True
+        self.reload_timer = self.weapon_config.reload_time
+        play_sound("reload_start")
+        logger.debug(
+            f"Player started reload (mag: {self.magazine}/{self.magazine_size}, stash: {self.stash})"
+        )
+
+    def update_reload(self, delta_time: float) -> None:
+        """Update reload timer and complete reload when ready.
+
+        Args:
+            delta_time: Time elapsed since last frame in seconds
+        """
+        if not self.is_reloading:
+            return
+
+        # Countdown reload timer
+        self.reload_timer -= delta_time
+
+        # Complete reload when timer reaches zero
+        if self.reload_timer <= 0:
+            # Calculate how many bullets to transfer
+            bullets_needed = self.magazine_size - self.magazine
+            bullets_to_transfer = min(bullets_needed, self.stash)
+
+            # Transfer bullets from stash to magazine
+            self.magazine += bullets_to_transfer
+            self.stash -= bullets_to_transfer
+
+            self.is_reloading = False
+            self.reload_timer = 0.0
+            play_sound("reload_complete")
+            logger.debug(
+                f"Player reload complete (mag: {self.magazine}/{self.magazine_size}, stash: {self.stash})"
+            )
 
     def apply_speed_boost(self, multiplier: float, duration: float) -> None:
         """Apply a speed boost effect.

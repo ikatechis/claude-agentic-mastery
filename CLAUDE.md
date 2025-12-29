@@ -505,3 +505,27 @@ Build with confidence through verification.
 **MCP Tools Available:**
 - ✅ **ref.tools** - Installed and configured for pygame/Python documentation
 - Use `ref_search_documentation` and `ref_read_url` for all API verifications
+
+## 🎨 Asset Management Policy
+
+**KENNEY ONLY - NO AI GENERATION**
+
+**Why:** AI image generation (Pollinations, etc.) returns base64-encoded images that consume 10k-50k tokens PER IMAGE. This wastes our token budget.
+
+**Policy:**
+1. ✅ **Search Kenney collection exhaustively** (36,000+ CC0 assets)
+2. ✅ **Use existing Kenney assets** whenever possible
+3. ❌ **NEVER use Pollinations or other AI image generation** (token waste)
+4. ❓ **If asset not found:** Ask user to find/generate it manually
+
+**How to find Kenney assets:**
+- Use game-artist skill for guided search
+- Check `.claude/skills/game-artist/KENNEY_CATALOG.md` for pack index
+- Use spritesheet files for visual browsing
+- Search multiple related packs before giving up
+
+**If Kenney doesn't have it:**
+- Report what was searched and why nothing matched
+- Give clear style requirements for manual creation
+- Suggest placeholder colored circle as temporary solution
+- Wait for user to provide asset

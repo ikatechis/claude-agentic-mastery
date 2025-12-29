@@ -10,10 +10,6 @@
     "ref": {
       "type": "http",
       "url": "https://api.ref.tools/mcp?apiKey=ref-ef8fda3277fbb7b17e7c"
-    },
-    "pollinations": {
-      "command": "npx",
-      "args": ["-y", "@pollinations/model-context-protocol"]
     }
   }
 }

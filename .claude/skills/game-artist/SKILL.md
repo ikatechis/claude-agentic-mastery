@@ -1,7 +1,7 @@
 ---
 name: game-artist
-description: Manage game assets with Kenney-first approach. Search 36,000+ Kenney CC0 assets before generating. Use Pollinations for AI sprite generation when needed. Ensure style consistency with flat/vector Kenney aesthetic. Auto-triggers on asset requests.
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, mcp__pollinations__generateImage, mcp__pollinations__generateImageUrl
+description: Manage game assets with Kenney-ONLY approach. Search 36,000+ Kenney CC0 assets. If asset not found, ask user to find/generate manually. Ensure style consistency with flat/vector Kenney aesthetic. Auto-triggers on asset requests.
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
 # Game Artist Skill
@@ -16,9 +16,9 @@ This skill automatically triggers when you:
 - Want to add new sprites/graphics
 - Need asset recommendations
 
-## Core Principle: Kenney First
+## Core Principle: Kenney ONLY
 
-**Don't generate what already exists!**
+**Don't generate - use what exists!**
 
 The project has access to Kenney's All-in-1 collection (~36,000 assets, all CC0):
 - 150+ 2D asset packs
@@ -27,9 +27,9 @@ The project has access to Kenney's All-in-1 collection (~36,000 assets, all CC0)
 - Free for any use
 
 **Workflow:**
-1. 🔍 **Search** Kenney collection first
+1. 🔍 **Search** Kenney collection thoroughly
 2. ✅ **Use** existing asset if good match
-3. 🎨 **Generate** with Pollinations only if needed
+3. ❓ **Ask user** to find/generate manually if not found
 4. ✔️ **Verify** style matches flat/vector aesthetic
 
 ## Step-by-Step Workflow
@@ -155,7 +155,7 @@ ls "/path/to/Kenney/2D assets/Puzzle Assets/PNG/"
 ```
 Found perfect match → Use it (Step 4)
 Found close match  → Use and modify colors if needed (Step 4)
-No good match      → Generate new asset (Step 5)
+No good match      → Ask user to provide asset (Step 5)
 ```
 
 ### Step 4: Use Kenney Asset
@@ -196,48 +196,42 @@ If suitable asset found:
 💾 Saved to: assets/sprites/[filename]
 ```
 
-### Step 5: Generate with AI
+### Step 5: Ask User to Provide Asset
 
 Only if no suitable Kenney asset exists:
 
-1. **Check STYLE_GUIDE.md** - Review flat/vector characteristics
+1. **Report search results** - Explain what was searched and why nothing matched
 
-2. **Use Pollinations for AI generation:**
+2. **Ask user to provide asset:**
 
-   ```python
-   # Enhance prompt for game sprites
-   enhanced_prompt = f"""
-   [subject], top-down view, Kenney flat vector style,
-   smooth rounded shapes, bright [color] (#HEX),
-   transparent background, thin dark outline,
-   simple geometric forms, clean silhouette,
-   casual game aesthetic, high detailed, complete object,
-   not cut off, white solid background, game sprite, 2D asset
-   """
+   **Output to user:**
+   ```
+   ❌ No suitable Kenney asset found for: [asset description]
 
-   mcp__pollinations__generateImage(prompt=enhanced_prompt)
+   📁 Searched packs:
+   - [Pack 1] - [why didn't match]
+   - [Pack 2] - [why didn't match]
+
+   🎨 Style requirements for manual creation:
+   - Flat/vector style (NOT pixel art)
+   - Smooth rounded shapes with thin dark outline
+   - Simple geometric forms, clear silhouette
+   - Transparent background (PNG with alpha)
+   - Size: [recommended dimensions]
+   - Colors: [recommended from palette]
+
+   ✅ Options:
+   1. Find similar Kenney asset from different pack
+   2. Generate manually with AI tool of your choice
+   3. Create/edit sprite with image editor
+   4. Use placeholder colored circle for now
+
+   📥 Once created, save to: assets/sprites/[filename]
    ```
 
-3. **CRITICAL: Visually inspect with Read tool** - Use Claude Vision to verify the generated image matches the prompt requirements
+3. **Suggest placeholder** - Offer to use colored circle fallback
 
-4. **Post-processing:**
-   - Save image to `assets/sprites/ai_generated/[filename]`
-   - Remove background if needed:
-     ```bash
-     convert sprite.png -fuzz 20% -transparent "#COLOR" output.png
-     ```
-     Common background colors: white (#FFFFFF), light gray (#F5F5F5), cyan (#B3E5FC)
-
-5. **Quality check** (see Step 6)
-
-**Output to user:**
-```
-🎨 Generated new asset (no Kenney match found)
-🤖 Service: Pollinations
-📝 Prompt: [prompt used]
-💾 Saved to: [file path]
-⚠️ Note: Verify style matches in-game
-```
+4. **Wait for user** - Don't proceed until asset is provided
 
 ### Step 6: Quality Verification
 
@@ -271,10 +265,10 @@ For Kenney assets:
 → Try different asset from same pack
 → Try similar pack with better style match
 
-For generated assets:
-→ Refine prompt with more style keywords
-→ Regenerate with adjusted parameters
-→ Compare multiple generations
+For user-provided assets:
+→ Give feedback on style mismatch
+→ Reference STYLE_GUIDE.md for requirements
+→ Suggest specific improvements needed
 ```
 
 ## Advanced Features
@@ -348,13 +342,23 @@ Quick references:
 **Workflow:**
 1. Check Topdown Shooter spritesheet → Has zombies, but no flying variant
 2. Check Space Shooter Redux spritesheet → Has flying enemies, but wrong theme
-3. **Decision:** Generate custom asset
-4. Enhanced prompt: "flying zombie, top-down view, Kenney flat vector style, green zombie with tattered wings, high detailed, complete object, not cut off, white solid background, game sprite, 2D asset"
-5. Generate with Pollinations
-   - `mcp__pollinations__generateImage(prompt=enhanced_prompt)`
-6. Visually inspect with Read tool
+3. **Decision:** Asset not found in Kenney
+4. Report to user:
+   ```
+   ❌ No flying zombie found in Kenney collection
+
+   📁 Searched: Topdown Shooter (has zombies), Space Shooter Redux (has flying)
+
+   ✅ Options:
+   1. Use regular zombie sprite as placeholder
+   2. Modify existing zombie sprite with wings manually
+   3. Generate externally with: "flying zombie, top-down view, Kenney flat vector style"
+
+   📥 Save to: assets/sprites/flying_zombie.png
+   ```
+5. Wait for user to provide asset
+6. Once provided, visually inspect with Read tool
 7. Verify style matches existing zombie
-8. Save to `assets/sprites/ai_generated/flying_zombie.png`
 
 ### Scenario 3: Environment Props
 
@@ -376,19 +380,13 @@ Quick references:
 **No suitable Kenney asset found:**
 → Search related packs (check KENNEY_CATALOG.md)
 → Try similar assets that can be modified
-→ Generate custom asset with Pollinations
+→ Ask user to provide custom asset
 
-**Generated asset doesn't match style:**
-→ Refine prompt with more "Kenney" keywords
-→ Add negative prompts ("NOT pixel art")
-→ Compare with Kenney reference in prompt
-→ Regenerate with adjusted parameters
-→ Try different Pollinations model
-
-**Pollinations quality issues:**
-→ Enhance prompt: ensure "high detailed, complete object, not cut off, white solid background, game sprite, 2D asset" is included
-→ Try different Pollinations model
-→ Regenerate multiple times and pick best result
+**User-provided asset doesn't match style:**
+→ Give clear feedback on what's wrong
+→ Reference STYLE_GUIDE.md requirements
+→ Provide example Kenney asset for comparison
+→ Suggest specific style adjustments needed
 
 **Kenney asset wrong size:**
 → Resize maintaining aspect ratio
@@ -402,21 +400,21 @@ Quick references:
 
 ## Tips for Success
 
-✅ **Always check Kenney first** - 90% of needs covered
+✅ **Always check Kenney exhaustively** - 90% of needs covered
 ✅ **Use spritesheet files** - See entire pack at once with visual inspection
 ✅ **Use Preview.png files** - Alternative quick browse method
-✅ **Use Pollinations for AI generation** - Free and unlimited
+✅ **Search multiple related packs** - Don't give up after one pack
 ✅ **Maintain style consistency** - Flat/vector throughout
 ✅ **Verify in-game** - Test alongside existing sprites
-✅ **Document sources** - Track which pack/service assets came from
+✅ **Document sources** - Track which pack assets came from
 ✅ **Keep aspect ratios** - Don't stretch/squash
 ✅ **Use tile-based sizing** - Multiples of 64px base unit
 
 ❌ **Don't mix styles** - No pixel art with vector art
-❌ **Don't over-generate** - Check Kenney exhaustively first
+❌ **Don't give up too quickly** - Search thoroughly before asking user
 ❌ **Don't ignore scale** - Size relative to characters matters
 ❌ **Don't forget transparency** - All sprites need alpha channel
-❌ **Don't use raw prompts** - Always enhance prompts with style keywords
+❌ **Don't generate with tokens** - Save tokens, use Kenney only
 
 ## Output Format
 
@@ -425,7 +423,7 @@ When completing an asset request:
 ```markdown
 ## Asset Request: [Asset Name]
 
-**Source:** [Kenney Pack Name] OR [AI Generated - Pollinations]
+**Source:** [Kenney Pack Name] OR [User Provided]
 **File Path:** assets/sprites/[filename]
 **Size:** [dimensions] ([X tiles])
 **Style Match:** ✅ Verified / ⚠️ Needs review
@@ -452,6 +450,6 @@ This allows autonomous exploration and decision-making.
 
 ## Remember
 
-**Kenney first, generate second!**
+**Kenney ONLY - no token-expensive generation!**
 
-The goal is to maximize use of professional CC0 assets while maintaining visual consistency. Only generate when Kenney's collection doesn't have what we need.
+The goal is to maximize use of professional CC0 assets while maintaining visual consistency. If Kenney doesn't have it, ask the user to provide it manually to save tokens.
